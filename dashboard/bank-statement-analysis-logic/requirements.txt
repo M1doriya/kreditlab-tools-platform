@@ -1,0 +1,30 @@
+# Bank Statement Parser - Requirements
+# Python 3.8+
+
+# Core app
+streamlit>=1.28.0
+pandas>=2.0.0
+xlsxwriter>=3.0.0
+
+# PDF parsing (table/text extraction)
+pdfplumber>=0.10.0
+pdfminer.six>=20221105
+
+# Encrypted PDF support (password-protected PDFs)
+pypdf>=4.0.0
+
+# Utilities
+regex>=2023.0.0
+Pillow>=9.0.0
+
+# Excel support (optional but commonly useful)
+openpyxl>=3.1.0
+
+# Optional: alternative PDF backend / rendering (only if your code uses it)
+PyMuPDF>=1.23.0
+
+# Optional: OCR (requires Tesseract installed on the host OS)
+pytesseract>=0.3.10
+
+# Security / crypto (often pulled transitively, but safe to include)
+cryptography>=41.0.0

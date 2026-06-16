@@ -11,6 +11,7 @@ node_modules
 # Local-only artifacts.
 financial-statement-analysis-logic/__pycache__
 financial-statement-analysis-logic/samples
+bank-statement-analysis-logic/__pycache__
 **/*.pyc
 **/*.bak
 *.log

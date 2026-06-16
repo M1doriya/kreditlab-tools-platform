@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { notFound, useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { bankStatementAnalysisSection } from "@/lib/bank-statement-analysis-config";
+import { financialStatementAnalysisSection } from "@/lib/financial-statement-analysis-config";
 import {
   Building2,
   CalendarDays,
@@ -20,6 +22,10 @@ import {
   FinancialStatementAnalysisErrorBoundary,
   FinancialStatementAnalysisSection,
 } from "./financial-statement-analysis-section";
+import {
+  BankStatementAnalysisErrorBoundary,
+  BankStatementAnalysisSection,
+} from "./bank-statement-analysis-section";
 
 type CaseItem = {
   id: string;
@@ -76,7 +82,10 @@ export default function CaseDetailPage() {
   const [activeTab, setActiveTab] = useState<TabKey>("overview");
 
   const [documents, setDocuments] = useState<CaseDocument[]>([]);
-  const [analysisReport, setAnalysisReport] = useState<AnalysisReport | null>(null);
+  const [financialAnalysisReport, setFinancialAnalysisReport] =
+    useState<AnalysisReport | null>(null);
+  const [bankAnalysisReport, setBankAnalysisReport] =
+    useState<AnalysisReport | null>(null);
 
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -100,20 +109,39 @@ export default function CaseDetailPage() {
     }
   };
 
-  const fetchAnalysisReport = async () => {
+  const fetchLatestAnalysisReport = async (
+    analysisType: string,
+    onLoaded: (report: AnalysisReport | null) => void
+  ) => {
     if (!id) return;
 
     const { data, error } = await supabase
       .from("case_analysis_reports")
       .select("*")
       .eq("case_id", id)
+      .eq("analysis_type", analysisType)
       .order("created_at", { ascending: false })
       .limit(1)
       .single();
 
     if (!error && data) {
-      setAnalysisReport(data);
+      onLoaded(data);
+    } else {
+      onLoaded(null);
     }
+  };
+
+  const fetchAnalysisReports = async () => {
+    await Promise.all([
+      fetchLatestAnalysisReport(
+        financialStatementAnalysisSection.tool.analysisType,
+        setFinancialAnalysisReport
+      ),
+      fetchLatestAnalysisReport(
+        bankStatementAnalysisSection.tool.analysisType,
+        setBankAnalysisReport
+      ),
+    ]);
   };
 
   useEffect(() => {
@@ -136,7 +164,7 @@ export default function CaseDetailPage() {
     void fetchCase();
     const timer = window.setTimeout(() => {
       void fetchDocuments();
-      void fetchAnalysisReport();
+      void fetchAnalysisReports();
     }, 0);
 
     return () => window.clearTimeout(timer);
@@ -253,7 +281,7 @@ export default function CaseDetailPage() {
   };
 
   const downloadAnalysisReport = async (format: FinancialExportFormat) => {
-    if (!analysisReport) return;
+    if (!financialAnalysisReport) return;
 
     setExportingReportFormat(format);
     setReportExportError("");
@@ -266,7 +294,7 @@ export default function CaseDetailPage() {
         },
         body: JSON.stringify({
           format,
-          report: analysisReport.report_json || analysisReport,
+          report: financialAnalysisReport.report_json || financialAnalysisReport,
           fileName: caseData?.company_name || "financial-analysis",
         }),
       });
@@ -897,13 +925,13 @@ export default function CaseDetailPage() {
                   <div className="mt-5 flex flex-wrap gap-3">
                     <button
                       type="button"
-                      onClick={() => fetchAnalysisReport()}
+                      onClick={() => fetchAnalysisReports()}
                       className="rounded-xl bg-cyan-400 px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-cyan-300"
                     >
-                      Generate Full Report
+                      Refresh Reports
                     </button>
 
-                    {analysisReport && (
+                    {financialAnalysisReport && (
                       <>
                         <ReportExportButton
                           label="HTML"
@@ -1028,10 +1056,10 @@ export default function CaseDetailPage() {
                       Financial Analysis Result
                     </h3>
 
-                    {!analysisReport ? (
+                    {!financialAnalysisReport ? (
                       <div className="mt-4 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
                         <p className="font-medium text-slate-700">
-                          No analysis report generated yet
+                          No financial analysis report generated yet
                         </p>
                         <p className="mt-1 text-sm text-slate-500">
                           Go to Analysis tab, select financial statement documents, then run analysis.
@@ -1042,7 +1070,33 @@ export default function CaseDetailPage() {
                         <div
                           className="prose max-w-none"
                           dangerouslySetInnerHTML={{
-                            __html: analysisReport.report_html,
+                            __html: financialAnalysisReport.report_html,
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-8">
+                    <h3 className="text-lg font-semibold text-slate-900">
+                      Bank Statement Analysis Result
+                    </h3>
+
+                    {!bankAnalysisReport ? (
+                      <div className="mt-4 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+                        <p className="font-medium text-slate-700">
+                          No bank statement report generated yet
+                        </p>
+                        <p className="mt-1 text-sm text-slate-500">
+                          Go to Analysis tab, select bank statement PDFs, then run bank analysis.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+                        <div
+                          className="prose max-w-none"
+                          dangerouslySetInnerHTML={{
+                            __html: bankAnalysisReport.report_html,
                           }}
                         />
                       </div>
@@ -1053,14 +1107,25 @@ export default function CaseDetailPage() {
             )}
 
             {activeTab === "analysis" && caseData && (
-              <FinancialStatementAnalysisErrorBoundary>
-                <FinancialStatementAnalysisSection
-                  caseId={caseData.id}
-                  documents={documents}
-                  onAnalysisSaved={setAnalysisReport}
-                  onAnalysisReportsRefresh={fetchAnalysisReport}
-                />
-              </FinancialStatementAnalysisErrorBoundary>
+              <div className="space-y-6">
+                <FinancialStatementAnalysisErrorBoundary>
+                  <FinancialStatementAnalysisSection
+                    caseId={caseData.id}
+                    documents={documents}
+                    onAnalysisSaved={setFinancialAnalysisReport}
+                    onAnalysisReportsRefresh={fetchAnalysisReports}
+                  />
+                </FinancialStatementAnalysisErrorBoundary>
+
+                <BankStatementAnalysisErrorBoundary>
+                  <BankStatementAnalysisSection
+                    caseId={caseData.id}
+                    documents={documents}
+                    onAnalysisSaved={setBankAnalysisReport}
+                    onAnalysisReportsRefresh={fetchAnalysisReports}
+                  />
+                </BankStatementAnalysisErrorBoundary>
+              </div>
             )}
 
             {activeTab === "notes" && (

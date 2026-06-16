@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libpango-1.0-0 libpangocairo-1.0-0 libpangoft2-1.0-0 \
       libcairo2 libgdk-pixbuf-2.0-0 libffi8 \
       fontconfig fonts-inter fonts-liberation fonts-dejavu-core \
-      fonts-symbola shared-mime-info \
+      fonts-symbola shared-mime-info poppler-utils tesseract-ocr \
     && rm -rf /var/lib/apt/lists/*
 
 # Vendored COLR/SVG color emoji font + a fontconfig rule that makes it win for
@@ -40,9 +40,11 @@ RUN npm ci --include=dev
 
 # --- Python engine dependencies into an isolated venv ---
 COPY financial-statement-analysis-logic/requirements.txt financial-statement-analysis-logic/requirements.txt
+COPY bank-statement-analysis-logic/requirements.txt bank-statement-analysis-logic/requirements.txt
 RUN python3 -m venv /opt/venv \
  && /opt/venv/bin/pip install --no-cache-dir --upgrade pip \
- && /opt/venv/bin/pip install --no-cache-dir -r financial-statement-analysis-logic/requirements.txt
+ && /opt/venv/bin/pip install --no-cache-dir -r financial-statement-analysis-logic/requirements.txt \
+ && /opt/venv/bin/pip install --no-cache-dir -r bank-statement-analysis-logic/requirements.txt
 
 # --- App source ---
 COPY . .
@@ -62,7 +64,8 @@ RUN npm run build
 # Point the server at the venv interpreter that actually has `anthropic` et al.
 # Baked here so it can never be broken by a mistyped dashboard variable.
 ENV NODE_ENV=production \
-    FINANCIAL_RENDERER_PYTHON_BIN=/opt/venv/bin/python
+    FINANCIAL_RENDERER_PYTHON_BIN=/opt/venv/bin/python \
+    BANK_STATEMENT_ANALYZER_PYTHON_BIN=/opt/venv/bin/python
 
 EXPOSE 3000
 CMD ["npm", "run", "start"]

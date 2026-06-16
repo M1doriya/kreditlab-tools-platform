@@ -1,0 +1,4023 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <title>Financial Projection & DSCR Calculator v5.3 - [COMPANY_NAME]</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* ============================================
+       DSCR CALCULATOR v5.2 TEMPLATE
+       Theme: Dual Mode (Light & Dark) Banking Dashboard
+       Last Updated: January 2025
+       ============================================ */
+
+    /* Light Theme (Default) */
+    :root, [data-theme="light"] {
+      --bg: #f8fafc;
+      --bg-alt: #ffffff;
+      --card-bg: #ffffff;
+      --card-alt: #f8fafc;
+      --border-subtle: rgba(203,213,225,0.6);
+      --border-card: rgba(226,232,240,1);
+      
+      --accent: #059669;
+      --accent-soft: rgba(5,150,105,0.08);
+      --accent-border: rgba(5,150,105,0.3);
+      --accent-text: #047857;
+      
+      --danger: #dc2626;
+      --danger-soft: rgba(220,38,38,0.06);
+      --danger-border: rgba(220,38,38,0.25);
+      --danger-text: #b91c1c;
+      
+      --warn: #d97706;
+      --warn-soft: rgba(217,119,6,0.06);
+      --warn-border: rgba(217,119,6,0.3);
+      --warn-text: #b45309;
+      
+      --info: #2563eb;
+      --info-soft: rgba(37,99,235,0.06);
+      --info-border: rgba(37,99,235,0.25);
+      --info-text: #1d4ed8;
+      --purple-text: #7c3aed;
+      
+      --text-main: #1e293b;
+      --text-soft: #64748b;
+      --text-muted: #94a3b8;
+      --text-secondary: #475569;
+      
+      --chip-bg: #f1f5f9;
+      --table-header: #f8fafc;
+      --row-even: #ffffff;
+      --row-odd: #f8fafc;
+      --row-hover: rgba(37,99,235,0.04);
+      --highlight: #b45309;
+      
+      --dscr-strong: #059669;
+      --dscr-strong-bg: rgba(5,150,105,0.08);
+      --dscr-acceptable: #10b981;
+      --dscr-acceptable-bg: rgba(16,185,129,0.08);
+      --dscr-marginal: #d97706;
+      --dscr-marginal-bg: rgba(217,119,6,0.08);
+      --dscr-fail: #dc2626;
+      --dscr-fail-bg: rgba(220,38,38,0.08);
+      
+      --base-col-bg: rgba(5,150,105,0.06);
+      --proj-col-bg: rgba(217,119,6,0.06);
+      
+      --shadow-soft: 0 10px 15px -3px rgba(0,0,0,0.06);
+      --shadow-card: 0 4px 6px -1px rgba(0,0,0,0.05);
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+      --radius-pill: 999px;
+      
+      --header-bg: linear-gradient(135deg, #ffffff, #f8fafc);
+      --body-bg: linear-gradient(180deg, #f1f5f9 0%, #f8fafc 100%);
+      --section-header-bg: linear-gradient(90deg, rgba(37,99,235,0.08) 0%, rgba(37,99,235,0.03) 100%);
+      --total-row-bg: linear-gradient(90deg, rgba(5,150,105,0.06) 0%, rgba(5,150,105,0.02) 100%);
+      --grand-total-bg: linear-gradient(90deg, rgba(37,99,235,0.08) 0%, rgba(37,99,235,0.03) 100%);
+      --input-bg: #ffffff;
+      --input-border: #e2e8f0;
+    }
+
+    /* Dark Theme */
+    [data-theme="dark"] {
+      --bg: #0f172a;
+      --bg-alt: #020617;
+      --card-bg: #0b1120;
+      --card-alt: #020617;
+      --border-subtle: #1e293b;
+      --border-card: rgba(30,64,175,0.5);
+      
+      --accent: #22c55e;
+      --accent-soft: rgba(34,197,94,0.15);
+      --accent-border: rgba(34,197,94,0.5);
+      --accent-text: #86efac;
+      
+      --danger: #ef4444;
+      --danger-soft: rgba(248,113,113,0.18);
+      --danger-border: rgba(248,113,113,0.5);
+      --danger-text: #fecaca;
+      
+      --warn: #f59e0b;
+      --warn-soft: rgba(245,158,11,0.16);
+      --warn-border: rgba(245,158,11,0.7);
+      --warn-text: #fed7aa;
+      
+      --info: #3b82f6;
+      --info-soft: rgba(59,130,246,0.18);
+      --info-border: rgba(59,130,246,0.5);
+      --info-text: #93c5fd;
+      --purple-text: #c4b5fd;
+      
+      --text-main: #e5e7eb;
+      --text-soft: #9ca3af;
+      --text-muted: #6b7280;
+      --text-secondary: #d1d5db;
+      
+      --chip-bg: #111827;
+      --table-header: #020617;
+      --row-even: #020617;
+      --row-odd: #0f172a;
+      --row-hover: rgba(30,64,175,0.15);
+      --highlight: #facc15;
+      
+      --dscr-strong: #10b981;
+      --dscr-strong-bg: rgba(16,185,129,0.15);
+      --dscr-acceptable: #34d399;
+      --dscr-acceptable-bg: rgba(52,211,153,0.12);
+      --dscr-marginal: #f59e0b;
+      --dscr-marginal-bg: rgba(245,158,11,0.15);
+      --dscr-fail: #ef4444;
+      --dscr-fail-bg: rgba(239,68,68,0.15);
+      
+      --base-col-bg: rgba(34,197,94,0.12);
+      --proj-col-bg: rgba(250,204,21,0.10);
+      
+      --shadow-soft: 0 18px 45px rgba(15,23,42,0.8);
+      --shadow-card: 0 8px 25px rgba(0,0,0,0.4);
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+      --radius-pill: 999px;
+      
+      --header-bg: radial-gradient(circle at top left, rgba(56,189,248,0.22), rgba(15,23,42,0.98));
+      --body-bg: radial-gradient(circle at top left, #1e293b, #020617 40%, #000);
+      --section-header-bg: linear-gradient(90deg, rgba(59,130,246,0.25), rgba(15,23,42,0.95));
+      --total-row-bg: linear-gradient(90deg, rgba(34,197,94,0.12), rgba(15,23,42,0.95));
+      --grand-total-bg: linear-gradient(90deg, rgba(250,204,21,0.15), rgba(55,65,81,0.95));
+      --input-bg: #0f172a;
+      --input-border: #334155;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 32px 16px 40px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+      background: var(--body-bg);
+      color: var(--text-main);
+      min-height: 100vh;
+    }
+
+    .page {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    h1, h2, h3, h4 {
+      margin: 0;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    /* ============================================
+       HEADER CARD
+       ============================================ */
+    .header-card {
+      background: var(--header-bg);
+      border-radius: 24px;
+      padding: 20px 24px 18px;
+      border: 1px solid var(--border-subtle);
+      box-shadow: var(--shadow-soft);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .title-block {
+      flex: 1;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border-subtle);
+      background: var(--card-bg);
+      color: var(--text-soft);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+
+    .pill span.icon {
+      font-size: 13px;
+    }
+
+    .title-block h1 {
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .title-icon { display: none; }
+
+    .title-block p {
+      margin: 8px 0 0;
+      color: var(--text-soft);
+      font-size: 13px;
+    }
+
+    .header-meta {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px 24px;
+      font-size: 12px;
+    }
+
+    .meta-label {
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 10px;
+      margin-bottom: 3px;
+    }
+
+    .meta-value {
+      color: var(--text-main);
+      font-weight: 500;
+    }
+
+    .header-bottom {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    /* ============================================
+       ACTION BUTTONS (ALL IN HEADER)
+       ============================================ */
+    .action-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: var(--radius-pill);
+      border: 1px solid transparent;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .btn-preset {
+      background: var(--info-soft);
+      border-color: rgba(59,130,246,0.5);
+      color: var(--info-text);
+    }
+
+    .btn-preset:hover {
+      background: var(--info-soft);
+      border-color: rgba(59,130,246,0.8);
+    }
+
+    .btn-preset.active {
+      background: var(--info-soft);
+      border-color: var(--info);
+      box-shadow: 0 0 12px rgba(59,130,246,0.4);
+    }
+
+    .btn-action {
+      background: var(--accent-soft);
+      border-color: rgba(34,197,94,0.5);
+      color: var(--accent-text);
+    }
+
+    .btn-action:hover {
+      background: var(--accent-soft);
+      border-color: rgba(34,197,94,0.8);
+    }
+
+    .btn-reset {
+      background: var(--danger-soft);
+      border-color: rgba(239,68,68,0.5);
+      color: var(--danger-text);
+    }
+
+    .btn-reset:hover {
+      background: var(--danger-soft);
+      border-color: rgba(239,68,68,0.8);
+    }
+
+    .btn-export {
+      background: var(--purple-soft, rgba(124,58,237,0.06));
+      border-color: rgba(168,85,247,0.5);
+      color: var(--purple-text, #7c3aed);
+    }
+
+    .btn-export:hover {
+      background: var(--purple-soft, rgba(124,58,237,0.06));
+      border-color: rgba(168,85,247,0.8);
+    }
+
+    .btn span.icon {
+      font-size: 13px;
+    }
+
+    .btn-divider {
+      width: 1px;
+      height: 24px;
+      background: var(--border-subtle);
+      margin: 0 4px;
+    }
+
+    /* ============================================
+       BADGES
+       ============================================ */
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .badge {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid transparent;
+    }
+
+    .badge-ok {
+      border-color: rgba(34,197,94,0.5);
+      background: var(--accent-soft);
+      color: var(--accent-text);
+    }
+
+    .badge-warn {
+      border-color: rgba(245,158,11,0.7);
+      background: var(--warn-soft);
+      color: var(--warn-text);
+    }
+
+    .badge-fail {
+      border-color: rgba(239,68,68,0.6);
+      background: var(--danger-soft);
+      color: var(--danger-text);
+    }
+
+    .badge-info {
+      border-color: rgba(59,130,246,0.6);
+      background: var(--info-soft);
+      color: var(--info-text);
+    }
+
+    .badge span.icon {
+      font-size: 13px;
+    }
+
+    /* ============================================
+       CARDS
+       ============================================ */
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(30,64,175,0.75);
+      box-shadow: var(--shadow-soft);
+      padding: 18px 18px 16px;
+    }
+
+    .card h2 {
+      font-size: 15px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card h2 span.icon {
+      font-size: 17px;
+    }
+
+    /* ============================================
+       EXECUTIVE DASHBOARD
+       ============================================ */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 18px;
+      margin-top: 20px;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .kpi {
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      background: var(--table-header);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .kpi-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+
+    .kpi-value {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .kpi-chip {
+      font-size: 11px;
+      color: var(--text-soft);
+    }
+
+    .kpi-positive .kpi-value { color: #4ade80; }
+    .kpi-negative .kpi-value { color: #f87171; }
+    .kpi-neutral .kpi-value { color: #38bdf8; }
+    .kpi-muted .kpi-value { color: var(--text-soft); }
+    .kpi-highlight .kpi-value { color: var(--highlight); }
+
+    /* ============================================
+       DSCR GAUGE
+       ============================================ */
+    .gauge-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .gauge-wrapper {
+      position: relative;
+      width: 200px;
+      height: 120px;
+    }
+
+    .gauge-svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .gauge-bg {
+      fill: none;
+      stroke: rgba(55,65,81,0.6);
+      stroke-width: 16;
+    }
+
+    .gauge-segment {
+      fill: none;
+      stroke-width: 16;
+      stroke-linecap: round;
+    }
+
+    .gauge-needle {
+      fill: #e5e7eb;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    }
+
+    .gauge-center {
+      fill: #1e293b;
+      stroke: rgba(148,163,184,0.5);
+      stroke-width: 2;
+    }
+
+    .gauge-value {
+      font-size: 28px;
+      font-weight: 700;
+      text-anchor: middle;
+      fill: var(--text-main);
+    }
+
+    .gauge-label {
+      font-size: 11px;
+      text-anchor: middle;
+      fill: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .gauge-status {
+      margin-top: 12px;
+      padding: 6px 16px;
+      border-radius: var(--radius-pill);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .gauge-status.strong {
+      background: var(--dscr-strong-bg);
+      color: var(--dscr-strong);
+      border: 1px solid var(--dscr-strong);
+    }
+
+    .gauge-status.acceptable {
+      background: var(--dscr-acceptable-bg);
+      color: var(--dscr-acceptable);
+      border: 1px solid var(--dscr-acceptable);
+    }
+
+    .gauge-status.marginal {
+      background: var(--dscr-marginal-bg);
+      color: var(--dscr-marginal);
+      border: 1px solid var(--dscr-marginal);
+    }
+
+    .gauge-status.fail {
+      background: var(--dscr-fail-bg);
+      color: var(--dscr-fail);
+      border: 1px solid var(--dscr-fail);
+    }
+
+    /* ============================================
+       EBITDA TREND BAR CHART
+       ============================================ */
+    .trend-chart {
+      margin-top: 16px;
+    }
+
+    .trend-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .trend-bar-label {
+      width: 100px;
+      font-size: 11px;
+      color: var(--text-soft);
+      text-align: right;
+    }
+
+    .trend-bar-container {
+      flex: 1;
+      height: 24px;
+      background: var(--border-subtle);
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .trend-bar {
+      height: 100%;
+      border-radius: 6px;
+      transition: width 0.5s ease;
+    }
+
+    .trend-bar.fy1 {
+      background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    }
+
+    .trend-bar.fy2 {
+      background: linear-gradient(90deg, #22c55e, #4ade80);
+    }
+
+    .trend-bar.fy3 {
+      background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    }
+
+    .trend-bar.p1 {
+      background: linear-gradient(90deg, #8b5cf6, #a78bfa);
+    }
+
+    .trend-bar-value {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    /* ============================================
+       SECTIONS
+       ============================================ */
+    .section {
+      margin-top: 24px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title span.icon {
+      font-size: 17px;
+    }
+
+    .section-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* ============================================
+       TABLES
+       ============================================ */
+    .table-card {
+      background: var(--card-bg);
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(31,41,55,0.9);
+      box-shadow: var(--shadow-soft);
+      padding: 16px;
+      overflow: hidden;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    thead th {
+      text-align: left;
+      padding: 10px 12px;
+      background: var(--card-bg);
+      color: var(--text-soft);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-bottom: 1px solid rgba(55,65,81,0.9);
+      white-space: nowrap;
+    }
+
+    tbody td {
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(31,41,55,0.7);
+      white-space: nowrap;
+    }
+
+    tbody tr:nth-child(even) {
+      background: var(--row-even);
+    }
+
+    tbody tr:nth-child(odd) {
+      background: var(--row-odd);
+    }
+
+    tbody tr:hover {
+      background: var(--row-hover);
+    }
+
+    tbody tr.highlight-row {
+      background: var(--total-row-bg) !important;
+    }
+
+    tbody tr.highlight-row td {
+      font-weight: 600;
+      color: #4ade80;
+    }
+
+    tfoot td {
+      padding: 10px 12px;
+      background: var(--grand-total-bg);
+      border-top: 1px solid rgba(250,204,21,0.95);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .text-right { text-align: right; }
+    .text-center { text-align: center; }
+    .text-left { text-align: left; }
+
+    /* Column highlighting */
+    .base-col {
+      background: var(--base-col-bg) !important;
+    }
+
+    .proj-col {
+      background: var(--proj-col-bg) !important;
+    }
+
+    th.base-col, th.proj-col {
+      color: #333 !important;
+    }
+
+    /* Value colors */
+    .value-positive { color: #4ade80; font-variant-numeric: tabular-nums; }
+    .value-negative { color: #f97373; font-variant-numeric: tabular-nums; }
+    .value-neutral { color: var(--text-main); font-variant-numeric: tabular-nums; }
+    .value-highlight { color: var(--highlight); font-variant-numeric: tabular-nums; font-weight: 600; }
+
+    /* ============================================
+       INPUT FIELDS
+       ============================================ */
+    input[type="number"],
+    input[type="text"],
+    select {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(75,85,99,0.8);
+      background: var(--row-even);
+      color: var(--text-main);
+      font-size: 12px;
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+
+    input[type="number"]:focus,
+    input[type="text"]:focus,
+    select:focus {
+      outline: none;
+      border-color: rgba(59,130,246,0.8);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+    }
+
+    input[type="number"]:disabled,
+    input[type="text"]:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    input.input-sm {
+      padding: 6px 8px;
+      font-size: 11px;
+    }
+
+    /* ============================================
+       TOGGLE SWITCH
+       ============================================ */
+    .toggle-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: var(--card-bg);
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(75,85,99,0.6);
+      margin-bottom: 16px;
+    }
+
+    .toggle-label {
+      font-size: 12px;
+      color: var(--text-soft);
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 48px;
+      height: 26px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--border-subtle);
+      border-radius: 26px;
+      transition: 0.3s;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: 0.3s;
+    }
+
+    .toggle-switch input:checked + .toggle-slider {
+      background: var(--accent);
+    }
+
+    .toggle-switch input:checked + .toggle-slider:before {
+      transform: translateX(22px);
+    }
+
+    .toggle-months {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toggle-months select {
+      width: 70px;
+    }
+
+    /* ============================================
+       DIRECTORS FACILITIES (GREYED OUT)
+       ============================================ */
+    .directors-section {
+      opacity: 0.6;
+      background: var(--warn-soft) !important;
+    }
+
+    .directors-section td {
+      background: var(--warn-soft) !important;
+    }
+
+    .directors-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      background: var(--warn-soft);
+      border: 1px solid rgba(245,158,11,0.4);
+      border-radius: var(--radius-pill);
+      font-size: 9px;
+      color: var(--warn-text);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* ============================================
+       v5.2 - BANK REFERENCE CELLS
+       ============================================ */
+    .bank-ref-cell {
+      background: var(--card-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 8px 6px;
+      text-align: center;
+    }
+    .bank-ref-name {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+    .bank-ref-val {
+      font-size: 12px;
+      color: var(--text-main);
+      margin-top: 4px;
+    }
+    .bank-ref-cell.max-bank {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+    .bank-ref-cell.max-bank .bank-ref-val {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    /* ============================================
+       DSCR STATUS BADGES IN TABLE
+       ============================================ */
+    .dscr-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .dscr-badge.strong {
+      background: var(--dscr-strong-bg);
+      color: var(--dscr-strong);
+      border: 1px solid var(--dscr-strong);
+    }
+
+    .dscr-badge.acceptable {
+      background: var(--dscr-acceptable-bg);
+      color: var(--dscr-acceptable);
+      border: 1px solid var(--dscr-acceptable);
+    }
+
+    .dscr-badge.marginal {
+      background: var(--dscr-marginal-bg);
+      color: var(--dscr-marginal);
+      border: 1px solid var(--dscr-marginal);
+    }
+
+    .dscr-badge.fail {
+      background: var(--dscr-fail-bg);
+      color: var(--dscr-fail);
+      border: 1px solid var(--dscr-fail);
+    }
+
+    /* ============================================
+       DSCR CELL HIGHLIGHTING
+       ============================================ */
+    .dscr-cell {
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-weight: 600;
+      display: inline-block;
+      min-width: 60px;
+      text-align: center;
+    }
+
+    .dscr-cell.strong {
+      background: var(--dscr-strong-bg);
+      color: var(--dscr-strong);
+    }
+
+    .dscr-cell.acceptable {
+      background: var(--dscr-acceptable-bg);
+      color: var(--dscr-acceptable);
+    }
+
+    .dscr-cell.marginal {
+      background: var(--dscr-marginal-bg);
+      color: var(--dscr-marginal);
+    }
+
+    .dscr-cell.fail {
+      background: var(--dscr-fail-bg);
+      color: var(--dscr-fail);
+    }
+
+    /* ============================================
+       TWO COLUMN LAYOUT
+       ============================================ */
+    .two-col {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .three-col {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    /* ============================================
+       SENSITIVITY ANALYSIS
+       ============================================ */
+    .sensitivity-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .sensitivity-card {
+      padding: 14px;
+      border-radius: var(--radius-md);
+      background: var(--row-even);
+      border: 1px solid rgba(75,85,99,0.6);
+      text-align: center;
+    }
+
+    .sensitivity-card.active {
+      border-color: rgba(59,130,246,0.8);
+      background: var(--info-soft);
+    }
+
+    .sensitivity-title {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+
+    .sensitivity-value {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .sensitivity-detail {
+      font-size: 10px;
+      color: var(--text-soft);
+    }
+
+    /* ============================================
+       BREAKEVEN & DEBT CAPACITY CALCULATORS
+       ============================================ */
+    .calc-box {
+      padding: 16px;
+      border-radius: var(--radius-md);
+      background: var(--card-bg);
+      border: 1px solid rgba(75,85,99,0.6);
+    }
+
+    .calc-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px dashed rgba(75,85,99,0.5);
+    }
+
+    .calc-row:last-child {
+      border-bottom: none;
+    }
+
+    .calc-label {
+      font-size: 12px;
+      color: var(--text-soft);
+    }
+
+    .calc-value {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .calc-value.highlight {
+      color: #4ade80;
+      font-size: 15px;
+    }
+
+    /* ============================================
+       SCENARIO COMPARISON
+       ============================================ */
+    .scenario-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .scenario-box {
+      padding: 16px;
+      border-radius: var(--radius-md);
+      background: var(--row-even);
+      border: 1px solid rgba(75,85,99,0.6);
+    }
+
+    .scenario-box.scenario-a {
+      border-color: rgba(59,130,246,0.6);
+    }
+
+    .scenario-box.scenario-b {
+      border-color: rgba(168,85,247,0.6);
+    }
+
+    .scenario-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(75,85,99,0.5);
+    }
+
+    /* ============================================
+       BANK RECOMMENDATION
+       ============================================ */
+    .bank-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .bank-card {
+      padding: 14px;
+      border-radius: var(--radius-md);
+      background: var(--row-even);
+      border: 1px solid rgba(75,85,99,0.6);
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+
+    .bank-card.pass {
+      border-color: rgba(34,197,94,0.6);
+      background: var(--accent-soft);
+    }
+
+    .bank-card.fail {
+      border-color: rgba(239,68,68,0.4);
+      background: var(--danger-soft);
+      opacity: 0.6;
+    }
+
+    .bank-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 6px;
+    }
+
+    .bank-threshold {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .bank-dscr {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .bank-card.pass .bank-dscr {
+      color: #4ade80;
+    }
+
+    .bank-card.fail .bank-dscr {
+      color: #f87171;
+    }
+
+    /* ============================================
+       WARNING BOX
+       ============================================ */
+    .warning-box {
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      background: var(--warn-soft);
+      border: 1px solid rgba(245,158,11,0.5);
+      margin-bottom: 16px;
+    }
+
+    .warning-box .warning-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #fbbf24;
+      margin-bottom: 6px;
+    }
+
+    .warning-box .warning-content {
+      font-size: 11px;
+      color: var(--warn-text);
+    }
+
+    /* ============================================
+       NOTES & INFO BOXES
+       ============================================ */
+    .note-box {
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      background: var(--info-soft);
+      border: 1px solid rgba(59,130,246,0.4);
+      font-size: 11px;
+      color: var(--info-text);
+      margin-top: 12px;
+    }
+
+    .note-box strong {
+      color: #bfdbfe;
+    }
+
+    /* ============================================
+       QA GRID
+       ============================================ */
+    .qa-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      font-size: 11px;
+    }
+
+    .qa-item {
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      background: var(--card-bg);
+      border: 1px solid rgba(51,65,85,0.9);
+    }
+
+    .qa-label {
+      color: var(--text-muted);
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-size: 10px;
+    }
+
+    .qa-value {
+      font-weight: 500;
+    }
+
+    /* ============================================
+       FOOTER
+       ============================================ */
+    footer {
+      margin-top: 28px;
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      border-top: 1px solid rgba(31,41,55,0.9);
+      padding-top: 12px;
+    }
+
+    /* ============================================
+       RESPONSIVE
+       ============================================ */
+    @media (max-width: 1200px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+      .bank-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 900px) {
+      .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .two-col, .three-col, .qa-grid, .scenario-grid {
+        grid-template-columns: 1fr;
+      }
+      .sensitivity-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .action-buttons {
+        justify-content: center;
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 20px 10px 24px;
+      }
+      .header-top {
+        flex-direction: column;
+      }
+      .kpi-grid, .sensitivity-grid, .bank-grid {
+        grid-template-columns: 1fr;
+      }
+      .btn {
+        padding: 6px 10px;
+        font-size: 10px;
+      }
+    }
+
+    /* ============================================
+       PRINT STYLES
+       ============================================ */
+    @media print {
+      body {
+        background: var(--body-bg);
+        color: #1e293b;
+      }
+      .card, .table-card, .header-card {
+        border: 1px solid #e5e7eb;
+        box-shadow: none;
+        background: var(--header-bg);
+      }
+      .btn {
+        display: none;
+      }
+    }
+  
+    /* Hide fy3 column when no data */
+    .fy3-hidden .fy3-col { display: none; }
+
+    /* Theme Toggle Button */
+    .theme-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      padding: 10px 18px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border-card, var(--border-subtle));
+      background: var(--card-bg);
+      color: var(--text-main);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: var(--shadow-card);
+      transition: all 0.3s ease;
+    }
+    .theme-toggle:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-soft);
+    }
+
+    /* Print - Force Light Theme */
+    @media print {
+      body { background: white !important; padding: 16px; }
+      .theme-toggle { display: none; }
+      .action-buttons { display: none; }
+      * { color: #1e293b !important; }
+    }
+
+    /* Responsive Theme Toggle */
+    @media (max-width: 768px) {
+      .theme-toggle { top: auto; bottom: 20px; right: 20px; }
+    }
+  
+  </style>
+</head>
+<body>
+  <button id="theme-toggle-btn" class="theme-toggle" onclick="toggleTheme()">🌙 Dark Mode</button>
+
+<div class="page">
+
+  <!-- ============================================
+       HEADER CARD
+       ============================================ -->
+  <div class="header-card">
+    <div class="header-top">
+      <div class="title-block">
+        <div class="pill"><span>DSCR CALCULATOR v5.2</span></div>
+        <h1>
+          <span>Financial Projection & DSCR Analysis</span>
+        </h1>
+        <p>[COMPANY_NAME] - Banking Facility Assessment</p>
+      </div>
+      <div class="header-meta">
+        <div>
+          <div class="meta-label">Company</div>
+          <div class="meta-value">[COMPANY_NAME]</div>
+        </div>
+        <div>
+          <div class="meta-label">Registration No.</div>
+          <div class="meta-value">[REG_NO] (1233291-H)</div>
+        </div>
+        <div>
+          <div class="meta-label">Base Year</div>
+          <div class="meta-value" id="baseYearLabel">-</div>
+        </div>
+        <div>
+          <div class="meta-label">Projection Period</div>
+          <div class="meta-value">P1 - P3 (3 Years)</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- ACTION BUTTONS (ALL IN HEADER) -->
+    <div class="header-bottom">
+      <div class="action-buttons">
+        <button class="btn btn-preset" onclick="applyPreset('conservative')">
+          <span>Conservative</span>
+        </button>
+        <button class="btn btn-preset active" onclick="applyPreset('base')">
+          <span>Base Case</span>
+        </button>
+        <button class="btn btn-preset" onclick="applyPreset('aggressive')">
+          <span>Aggressive</span>
+        </button>
+        <div class="btn-divider"></div>
+        <button class="btn btn-reset" onclick="resetInputs()">
+          <span>Reset</span>
+        </button>
+        <button class="btn btn-action" onclick="recalculate()">
+          <span>Recalculate</span>
+        </button>
+        <div class="btn-divider"></div>
+        <button class="btn btn-export" onclick="downloadHTML()">
+          <span>Save HTML</span>
+        </button>
+        <button class="btn btn-export" onclick="exportPDF()">
+          <span>Export PDF</span>
+        </button>
+        <button class="btn btn-export" onclick="copySummary()">
+          <span>Copy Summary</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================
+       EXECUTIVE DASHBOARD
+       ============================================ -->
+  <div class="dashboard-grid">
+    <section class="card">
+      <h2><span>Executive Summary</span></h2>
+      <div class="kpi-grid">
+        <div class="kpi kpi-highlight">
+          <div class="kpi-label">P1 Projected EBITDA</div>
+          <div class="kpi-value" id="kpiEbitda">RM 0</div>
+          <div class="kpi-chip">Year 1 Projection</div>
+        </div>
+        <div class="kpi kpi-negative">
+          <div class="kpi-label">Total Debt Service</div>
+          <div class="kpi-value" id="kpiDebtService">RM 0</div>
+          <div class="kpi-chip">Annual Commitment</div>
+        </div>
+        <div class="kpi kpi-positive">
+          <div class="kpi-label">P1 DSCR</div>
+          <div class="kpi-value" id="kpiDscr">0.00x</div>
+          <div class="kpi-chip">EBITDA &divide; Debt Service</div>
+        </div>
+        <div class="kpi kpi-neutral">
+          <div class="kpi-label">Base Revenue</div>
+          <div class="kpi-value" id="kpiRevenue">RM 0</div>
+          <div class="kpi-chip">From Base Year</div>
+        </div>
+        <div class="kpi kpi-neutral">
+          <div class="kpi-label">EBITDA Margin</div>
+          <div class="kpi-value" id="kpiMargin">0%</div>
+          <div class="kpi-chip">Historical Average</div>
+        </div>
+        <div class="kpi" id="kpiStatusBox">
+          <div class="kpi-label">Bank Status</div>
+          <div class="kpi-value" id="kpiStatus">-</div>
+          <div class="kpi-chip" id="kpiStatusDetail">Assessment Pending</div>
+        </div>
+      </div>
+
+      <!-- EBITDA Trend Chart -->
+      <div class="trend-chart">
+        <h4 style="font-size: 12px; color: var(--text-soft); margin-bottom: 12px;"></h4>
+        <div class="trend-bar-row">
+          <div class="trend-bar-label" id="trendLabelFy1">FY1</div>
+          <div class="trend-bar-container">
+            <div class="trend-bar fy1" id="trendFy1" style="width: 0%;"></div>
+            <div class="trend-bar-value" id="trendFy1Val">RM 0</div>
+          </div>
+        </div>
+        <div class="trend-bar-row">
+          <div class="trend-bar-label" id="trendLabelFy2">FY2</div>
+          <div class="trend-bar-container">
+            <div class="trend-bar fy2" id="trendFy2" style="width: 0%;"></div>
+            <div class="trend-bar-value" id="trendFy2Val">RM 0</div>
+          </div>
+        </div>
+        <div class="trend-bar-row" id="trendFy3Row">
+          <div class="trend-bar-label" id="trendLabelFy3">FY3</div>
+          <div class="trend-bar-container">
+            <div class="trend-bar fy3" id="trendFy3" style="width: 0%;"></div>
+            <div class="trend-bar-value" id="trendFy3Val">RM 0</div>
+          </div>
+        </div>
+        <div class="trend-bar-row">
+          <div class="trend-bar-label">P1 Projected</div>
+          <div class="trend-bar-container">
+            <div class="trend-bar p1" id="trendP1" style="width: 0%;"></div>
+            <div class="trend-bar-value" id="trendP1Val">RM 0</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DSCR GAUGE -->
+    <section class="card">
+      <h2><span>DSCR Gauge</span></h2>
+      <div class="gauge-container">
+        <div class="gauge-wrapper">
+          <svg class="gauge-svg" viewBox="0 0 200 120">
+            <!-- Background arc -->
+            <path class="gauge-bg" d="M 20 100 A 80 80 0 0 1 180 100" />
+            <!-- Color segments -->
+            <path class="gauge-segment" stroke="#ef4444" d="M 20 100 A 80 80 0 0 1 50 35" />
+            <path class="gauge-segment" stroke="#f59e0b" d="M 50 35 A 80 80 0 0 1 100 20" />
+            <path class="gauge-segment" stroke="#34d399" d="M 100 20 A 80 80 0 0 1 150 35" />
+            <path class="gauge-segment" stroke="#10b981" d="M 150 35 A 80 80 0 0 1 180 100" />
+            <!-- Needle -->
+            <polygon class="gauge-needle" id="gaugeNeedle" points="100,100 95,95 100,30 105,95" transform="rotate(-90 100 100)" />
+            <!-- Center circle -->
+            <circle class="gauge-center" cx="100" cy="100" r="12" />
+            <!-- Value text -->
+            <text class="gauge-value" x="100" y="85" id="gaugeValue">0.00x</text>
+            <text class="gauge-label" x="100" y="115">P1 DSCR</text>
+          </svg>
+        </div>
+        <div class="gauge-status strong" id="gaugeStatus">CALCULATING...</div>
+      </div>
+      
+      <!-- Legend -->
+      <div style="display: flex; justify-content: center; gap: 16px; margin-top: 12px; font-size: 10px;">
+        <div style="display: flex; align-items: center; gap: 4px;">
+          <div style="width: 12px; height: 12px; background: #ef4444; border-radius: 3px;"></div>
+          <span style="color: var(--text-muted);">&lt;1.00x</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 4px;">
+          <div style="width: 12px; height: 12px; background: #f59e0b; border-radius: 3px;"></div>
+          <span style="color: var(--text-muted);">1.00-1.24x</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 4px;">
+          <div style="width: 12px; height: 12px; background: #34d399; border-radius: 3px;"></div>
+          <span style="color: var(--text-muted);">1.25-1.49x</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 4px;">
+          <div style="width: 12px; height: 12px; background: #10b981; border-radius: 3px;"></div>
+          <span style="color: var(--text-muted);">≥1.50x</span>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============================================
+       SECTION A: BASE YEAR FINANCIALS
+       ============================================ -->
+  <section class="section">
+    <div class="section-header">
+      <div>
+        <div class="section-title"><span>Section A: Base Year Financials</span></div>
+        <div class="section-subtitle">Historical financial data (Read-Only)</div>
+      </div>
+      <div class="badge badge-info"><span>Auto-populated from source documents</span></div>
+    </div>
+    <div class="table-card">
+      <div class="table-wrapper">
+        <table id="tableA">
+          <thead>
+            <tr>
+              <th style="width: 240px;">Description</th>
+              <th class="text-right" style="width: 140px;" id="thFy1Header">FY1</th>
+              <th class="text-right" style="width: 140px;" id="thFy2Header">FY2</th>
+              <th class="text-right fy3-col" style="width: 140px;" id="thFy3Header">FY3</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Sales / Revenue</td>
+              <td class="text-right" id="fy1Revenue">RM 0</td>
+              <td class="text-right" id="fy2Revenue">RM 0</td>
+              <td class="text-right fy3-col" id="fy3Revenue">RM 0</td>
+            </tr>
+            <tr>
+              <td>Cost of Sales</td>
+              <td class="text-right" id="fy1Cos">RM 0</td>
+              <td class="text-right" id="fy2Cos">RM 0</td>
+              <td class="text-right fy3-col" id="fy3Cos">RM 0</td>
+            </tr>
+            <tr>
+              <td>Cost of Sales %</td>
+              <td class="text-right value-neutral" id="fy1CosP">0%</td>
+              <td class="text-right value-neutral" id="fy2CosP">0%</td>
+              <td class="text-right value-neutral fy3-col" id="fy3CosP">0%</td>
+            </tr>
+            <tr>
+              <td>Gross Profit</td>
+              <td class="text-right" id="fy1Gp">RM 0</td>
+              <td class="text-right" id="fy2Gp">RM 0</td>
+              <td class="text-right fy3-col" id="fy3Gp">RM 0</td>
+            </tr>
+            <tr>
+              <td>Gross Margin %</td>
+              <td class="text-right value-positive" id="fy1GpP">0%</td>
+              <td class="text-right value-positive" id="fy2GpP">0%</td>
+              <td class="text-right value-positive fy3-col" id="fy3GpP">0%</td>
+            </tr>
+            <tr>
+              <td>Operating Expenses</td>
+              <td class="text-right" id="fy1Opex">RM 0</td>
+              <td class="text-right" id="fy2Opex">RM 0</td>
+              <td class="text-right fy3-col" id="fy3Opex">RM 0</td>
+            </tr>
+            <tr>
+              <td>Operating Expenses %</td>
+              <td class="text-right value-neutral" id="fy1OpexP">0%</td>
+              <td class="text-right value-neutral" id="fy2OpexP">0%</td>
+              <td class="text-right value-neutral fy3-col" id="fy3OpexP">0%</td>
+            </tr>
+            <tr class="highlight-row">
+              <td><strong>EBITDA</strong></td>
+              <td class="text-right" id="fy1Ebitda">RM 0</td>
+              <td class="text-right" id="fy2Ebitda">RM 0</td>
+              <td class="text-right fy3-col" id="fy3Ebitda">RM 0</td>
+            </tr>
+            <tr>
+              <td>EBITDA Margin %</td>
+              <td class="text-right value-highlight" id="fy1EbitdaP">0%</td>
+              <td class="text-right value-highlight" id="fy2EbitdaP">0%</td>
+              <td class="text-right value-highlight fy3-col" id="fy3EbitdaP">0%</td>
+            </tr>
+            <tr>
+              <td>Depreciation</td>
+              <td class="text-right" id="fy1Dep">RM 0</td>
+              <td class="text-right" id="fy2Dep">RM 0</td>
+              <td class="text-right fy3-col" id="fy3Dep">RM 0</td>
+            </tr>
+            <tr>
+              <td>Finance Costs</td>
+              <td class="text-right" id="fy1Fin">RM 0</td>
+              <td class="text-right" id="fy2Fin">RM 0</td>
+              <td class="text-right fy3-col" id="fy3Fin">RM 0</td>
+            </tr>
+            <tr>
+              <td>Profit Before Tax</td>
+              <td class="text-right" id="fy1Pbt">RM 0</td>
+              <td class="text-right" id="fy2Pbt">RM 0</td>
+              <td class="text-right fy3-col" id="fy3Pbt">RM 0</td>
+            </tr>
+            <tr>
+              <td>Taxation</td>
+              <td class="text-right" id="fy1Tax">RM 0</td>
+              <td class="text-right" id="fy2Tax">RM 0</td>
+              <td class="text-right fy3-col" id="fy3Tax">RM 0</td>
+            </tr>
+            <tr>
+              <td>Net Profit</td>
+              <td class="text-right" id="fy1Np">RM 0</td>
+              <td class="text-right" id="fy2Np">RM 0</td>
+              <td class="text-right fy3-col" id="fy3Np">RM 0</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       BASE YEAR SELECTOR
+       ============================================ -->
+  <section class="section" id="baseYearSection">
+    <div class="toggle-container">
+      <div class="toggle-label">
+        <strong>Base Year for Projection:</strong>
+      </div>
+      <select id="baseYearSelect" onchange="recalculate()" style="padding: 6px 12px; border-radius: 8px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-main); font-size: 13px;">
+        <option value="fy3" selected>FY3 (Latest Audited)</option>
+        <option value="fy2">FY2</option>
+      </select>
+      <span style="font-size: 11px; color: var(--text-muted); margin-left: 8px;" id="baseYearLabel"></span>
+    </div>
+  </section>
+
+  <!-- ============================================
+       SECTION B: PROJECTION INPUTS
+       ============================================ -->
+  <section class="section">
+    <div class="section-header">
+      <div>
+        <div class="section-title"><span>Section B: Projection Inputs</span></div>
+        <div class="section-subtitle">Adjust assumptions for financial projections (Editable)</div>
+      </div>
+    </div>
+    <div class="table-card">
+      <div class="table-wrapper">
+        <table id="tableB">
+          <thead>
+            <tr>
+              <th style="width: 200px;">Input Parameters</th>
+              <th class="text-center proj-col" style="width: 120px;">P1 (Year 1)</th>
+              <th class="text-center proj-col" style="width: 120px;">P2 (Year 2)</th>
+              <th class="text-center proj-col" style="width: 120px;">P3 (Year 3)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Sales Growth %</td>
+              <td class="proj-col"><input type="number" id="sg_p1" value="10" step="0.1" onchange="recalculate()"></td>
+              <td class="proj-col"><input type="number" id="sg_p2" value="8" step="0.1" onchange="recalculate()"></td>
+              <td class="proj-col"><input type="number" id="sg_p3" value="5" step="0.1" onchange="recalculate()"></td>
+            </tr>
+            <tr>
+              <td>EBITDA Margin %</td>
+              <td class="proj-col"><input type="number" id="em_p1" value="10" step="0.1" onchange="recalculate()"></td>
+              <td class="proj-col"><input type="number" id="em_p2" value="10" step="0.1" onchange="recalculate()"></td>
+              <td class="proj-col"><input type="number" id="em_p3" value="10" step="0.1" onchange="recalculate()"></td>
+            </tr>
+            <tr>
+              <td>Cost of Sales %</td>
+              <td class="proj-col"><input type="number" id="cos_p1" value="62" step="0.1" onchange="recalculate()"></td>
+              <td class="proj-col"><input type="number" id="cos_p2" value="62" step="0.1" onchange="recalculate()"></td>
+              <td class="proj-col"><input type="number" id="cos_p3" value="62" step="0.1" onchange="recalculate()"></td>
+            </tr>
+            <tr>
+              <td>Operating Expenses %</td>
+              <td class="proj-col"><input type="number" id="opex_p1" value="25" step="0.1" onchange="recalculate()"></td>
+              <td class="proj-col"><input type="number" id="opex_p2" value="25" step="0.1" onchange="recalculate()"></td>
+              <td class="proj-col"><input type="number" id="opex_p3" value="25" step="0.1" onchange="recalculate()"></td>
+            </tr>
+            <tr>
+              <td>Debtors Days</td>
+              <td class="proj-col"><input type="number" id="deb_p1" value="30" step="1" onchange="recalculate()"></td>
+              <td class="proj-col"><input type="number" id="deb_p2" value="30" step="1" onchange="recalculate()"></td>
+              <td class="proj-col"><input type="number" id="deb_p3" value="30" step="1" onchange="recalculate()"></td>
+            </tr>
+            <tr>
+              <td>Stock Days</td>
+              <td class="proj-col"><input type="number" id="stk_p1" value="0" step="1" onchange="recalculate()"></td>
+              <td class="proj-col"><input type="number" id="stk_p2" value="0" step="1" onchange="recalculate()"></td>
+              <td class="proj-col"><input type="number" id="stk_p3" value="0" step="1" onchange="recalculate()"></td>
+            </tr>
+            <tr>
+              <td>Creditors Days</td>
+              <td class="proj-col"><input type="number" id="cred_p1" value="30" step="1" onchange="recalculate()"></td>
+              <td class="proj-col"><input type="number" id="cred_p2" value="30" step="1" onchange="recalculate()"></td>
+              <td class="proj-col"><input type="number" id="cred_p3" value="30" step="1" onchange="recalculate()"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       SECTION C: FINANCIAL PROJECTIONS
+       ============================================ -->
+  <section class="section">
+    <div class="section-header">
+      <div>
+        <div class="section-title"><span>Section C: Financial Projections</span></div>
+        <div class="section-subtitle">Auto-calculated based on Section B inputs</div>
+      </div>
+    </div>
+    <div class="table-card">
+      <div class="table-wrapper">
+        <table id="tableC">
+          <thead>
+            <tr>
+              <th style="width: 200px;">Description</th>
+              <th class="text-right base-col" style="width: 140px;">Base Year</th>
+              <th class="text-right proj-col" style="width: 140px;">P1</th>
+              <th class="text-right proj-col" style="width: 140px;">P2</th>
+              <th class="text-right proj-col" style="width: 140px;">P3</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Projected Sales</td>
+              <td class="text-right base-col" id="projSalesBase">RM 0</td>
+              <td class="text-right proj-col" id="projSalesP1">RM 0</td>
+              <td class="text-right proj-col" id="projSalesP2">RM 0</td>
+              <td class="text-right proj-col" id="projSalesP3">RM 0</td>
+            </tr>
+            <tr>
+              <td>Sales Growth %</td>
+              <td class="text-right base-col">-</td>
+              <td class="text-right proj-col" id="projGrowthP1">0%</td>
+              <td class="text-right proj-col" id="projGrowthP2">0%</td>
+              <td class="text-right proj-col" id="projGrowthP3">0%</td>
+            </tr>
+            <tr>
+              <td>Cost of Sales</td>
+              <td class="text-right base-col" id="projCosBase">RM 0</td>
+              <td class="text-right proj-col" id="projCosP1">RM 0</td>
+              <td class="text-right proj-col" id="projCosP2">RM 0</td>
+              <td class="text-right proj-col" id="projCosP3">RM 0</td>
+            </tr>
+            <tr>
+              <td>Gross Profit</td>
+              <td class="text-right base-col" id="projGpBase">RM 0</td>
+              <td class="text-right proj-col" id="projGpP1">RM 0</td>
+              <td class="text-right proj-col" id="projGpP2">RM 0</td>
+              <td class="text-right proj-col" id="projGpP3">RM 0</td>
+            </tr>
+            <tr>
+              <td>Operating Expenses</td>
+              <td class="text-right base-col" id="projOpexBase">RM 0</td>
+              <td class="text-right proj-col" id="projOpexP1">RM 0</td>
+              <td class="text-right proj-col" id="projOpexP2">RM 0</td>
+              <td class="text-right proj-col" id="projOpexP3">RM 0</td>
+            </tr>
+            <tr class="highlight-row">
+              <td><strong>Projected EBITDA</strong></td>
+              <td class="text-right base-col" id="projEbitdaBase">RM 0</td>
+              <td class="text-right proj-col" id="projEbitdaP1">RM 0</td>
+              <td class="text-right proj-col" id="projEbitdaP2">RM 0</td>
+              <td class="text-right proj-col" id="projEbitdaP3">RM 0</td>
+            </tr>
+            <tr>
+              <td>EBITDA Margin %</td>
+              <td class="text-right base-col" id="projEbitdaPBase">0%</td>
+              <td class="text-right proj-col" id="projEbitdaPP1">0%</td>
+              <td class="text-right proj-col" id="projEbitdaPP2">0%</td>
+              <td class="text-right proj-col" id="projEbitdaPP3">0%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       SECTION D: WORKING CAPITAL REQUIREMENT
+       ============================================ -->
+  <section class="section">
+    <div class="section-header">
+      <div>
+        <div class="section-title"><span>Section D: Working Capital Requirement</span></div>
+        <div class="section-subtitle">Operating Cycle Method - Indicative calculation for reference</div>
+      </div>
+    </div>
+    <div class="table-card">
+      <div class="table-wrapper">
+        <table id="tableD">
+          <thead>
+            <tr>
+              <th style="width: 200px;">Description</th>
+              <th class="text-right base-col" style="width: 130px;">Base</th>
+              <th class="text-right proj-col" style="width: 130px;">P1</th>
+              <th class="text-right proj-col" style="width: 130px;">P2</th>
+              <th class="text-right proj-col" style="width: 130px;">P3</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Projected Sales</td>
+              <td class="text-right base-col" id="wcrSalesBase">RM 0</td>
+              <td class="text-right proj-col" id="wcrSalesP1">RM 0</td>
+              <td class="text-right proj-col" id="wcrSalesP2">RM 0</td>
+              <td class="text-right proj-col" id="wcrSalesP3">RM 0</td>
+            </tr>
+            <tr>
+              <td>Projected COGS</td>
+              <td class="text-right base-col" id="wcrCogsBase">RM 0</td>
+              <td class="text-right proj-col" id="wcrCogsP1">RM 0</td>
+              <td class="text-right proj-col" id="wcrCogsP2">RM 0</td>
+              <td class="text-right proj-col" id="wcrCogsP3">RM 0</td>
+            </tr>
+            <tr>
+              <td>Debtors Days</td>
+              <td class="text-right base-col" id="wcrDebBase">-</td>
+              <td class="text-right proj-col" id="wcrDebP1">45</td>
+              <td class="text-right proj-col" id="wcrDebP2">45</td>
+              <td class="text-right proj-col" id="wcrDebP3">45</td>
+            </tr>
+            <tr>
+              <td>Stock Days</td>
+              <td class="text-right base-col" id="wcrStkBase">-</td>
+              <td class="text-right proj-col" id="wcrStkP1">0</td>
+              <td class="text-right proj-col" id="wcrStkP2">0</td>
+              <td class="text-right proj-col" id="wcrStkP3">0</td>
+            </tr>
+            <tr>
+              <td>Creditors Days</td>
+              <td class="text-right base-col" id="wcrCredBase">-</td>
+              <td class="text-right proj-col" id="wcrCredP1">30</td>
+              <td class="text-right proj-col" id="wcrCredP2">30</td>
+              <td class="text-right proj-col" id="wcrCredP3">30</td>
+            </tr>
+            <tr>
+              <td>Debtors (RM)</td>
+              <td class="text-right base-col" id="wcrDebRmBase">RM 0</td>
+              <td class="text-right proj-col" id="wcrDebRmP1">RM 0</td>
+              <td class="text-right proj-col" id="wcrDebRmP2">RM 0</td>
+              <td class="text-right proj-col" id="wcrDebRmP3">RM 0</td>
+            </tr>
+            <tr>
+              <td>Stock (RM)</td>
+              <td class="text-right base-col" id="wcrStkRmBase">RM 0</td>
+              <td class="text-right proj-col" id="wcrStkRmP1">RM 0</td>
+              <td class="text-right proj-col" id="wcrStkRmP2">RM 0</td>
+              <td class="text-right proj-col" id="wcrStkRmP3">RM 0</td>
+            </tr>
+            <tr>
+              <td>Creditors (RM)</td>
+              <td class="text-right base-col" id="wcrCredRmBase">RM 0</td>
+              <td class="text-right proj-col" id="wcrCredRmP1">RM 0</td>
+              <td class="text-right proj-col" id="wcrCredRmP2">RM 0</td>
+              <td class="text-right proj-col" id="wcrCredRmP3">RM 0</td>
+            </tr>
+            <tr>
+              <td>Cash Conversion Cycle</td>
+              <td class="text-right base-col" id="wcrCccBase">-</td>
+              <td class="text-right proj-col" id="wcrCccP1">15 days</td>
+              <td class="text-right proj-col" id="wcrCccP2">15 days</td>
+              <td class="text-right proj-col" id="wcrCccP3">15 days</td>
+            </tr>
+            <tr>
+              <td>Gross WCR</td>
+              <td class="text-right base-col" id="wcrGrossBase">RM 0</td>
+              <td class="text-right proj-col" id="wcrGrossP1">RM 0</td>
+              <td class="text-right proj-col" id="wcrGrossP2">RM 0</td>
+              <td class="text-right proj-col" id="wcrGrossP3">RM 0</td>
+            </tr>
+            <tr>
+              <td>Less: Existing WC Facility</td>
+              <td class="text-right base-col" id="wcrExistBase">RM 0</td>
+              <td class="text-right proj-col" id="wcrExistP1">RM 0</td>
+              <td class="text-right proj-col" id="wcrExistP2">RM 0</td>
+              <td class="text-right proj-col" id="wcrExistP3">RM 0</td>
+            </tr>
+            <tr class="highlight-row">
+              <td><strong>Net WCR Gap</strong></td>
+              <td class="text-right base-col" id="wcrNetBase">RM 0</td>
+              <td class="text-right proj-col" id="wcrNetP1">RM 0</td>
+              <td class="text-right proj-col" id="wcrNetP2">RM 0</td>
+              <td class="text-right proj-col" id="wcrNetP3">RM 0</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note-box">
+        <strong>Note:</strong> This WCR calculation is for reference only. It provides basis for working capital facility sizing. Enter proposed facilities in Section F. Service-based business (tuition) typically has minimal stock requirements.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       SECTION E: EXISTING COMMITMENT (v5.2 - Normalized)
+       ============================================ -->
+  <section class="section">
+    <div class="section-header">
+      <div>
+        <div class="section-title"><span>Section E: Existing Commitment</span></div>
+        <div class="section-subtitle">v5.2 Option C - Normalized commitment (Maximum across 6 banks)</div>
+      </div>
+    </div>
+    
+    <!-- E1: Normalized Company Commitment -->
+    <div class="table-card" style="margin-bottom: 16px;">
+      <h4 style="font-size: 13px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+        <span class="badge badge-ok"><span class="icon">E1</span><span>Company Facilities (Normalized) - INCLUDED in DSCR</span></span>
+      </h4>
+      
+      <!-- Normalized Value Display -->
+      <div style="display: flex; gap: 20px; margin-bottom: 16px;">
+        <div style="flex: 0 0 200px; background: var(--accent-soft); border: 1px solid var(--accent); border-radius: var(--radius-md); padding: 16px; text-align: center;">
+          <div style="font-size: 11px; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.05em;">Normalized Monthly</div>
+          <div style="font-size: 28px; font-weight: 700; color: var(--accent);" id="normalizedMonthly">RM 0</div>
+          <div style="font-size: 10px; color: var(--text-muted);">(Maximum across 6 banks)</div>
+        </div>
+        <div style="flex: 1; background: var(--card-alt); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 12px;">
+          <div style="font-size: 11px; color: var(--text-soft); margin-bottom: 8px;">Bank Breakdown (Reference)</div>
+          <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;" id="bankBreakdownGrid">
+            <div class="bank-ref-cell"><div class="bank-ref-name">RHB</div><div class="bank-ref-val" id="ref_rhb">RM 0</div></div>
+            <div class="bank-ref-cell"><div class="bank-ref-name">MBB</div><div class="bank-ref-val" id="ref_maybank">RM 0</div></div>
+            <div class="bank-ref-cell"><div class="bank-ref-name">CIMB</div><div class="bank-ref-val" id="ref_cimb">RM 0</div></div>
+            <div class="bank-ref-cell"><div class="bank-ref-name">SC</div><div class="bank-ref-val" id="ref_stanchart">RM 0</div></div>
+            <div class="bank-ref-cell"><div class="bank-ref-name">SME</div><div class="bank-ref-val" id="ref_smebank">RM 0</div></div>
+            <div class="bank-ref-cell"><div class="bank-ref-name">BR</div><div class="bank-ref-val" id="ref_brakyat">RM 0</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Legacy Company Facilities Table (for backward compatibility) -->
+      <div id="legacyCompanySection" style="display: none;">
+        <div class="table-wrapper">
+          <table id="tableECompany">
+            <thead>
+              <tr>
+                <th style="width: 40px;">No</th>
+                <th style="width: 160px;">Facility</th>
+                <th style="width: 120px;">Bank</th>
+                <th class="text-right" style="width: 110px;">Limit (RM)</th>
+                <th class="text-right" style="width: 110px;">Outstanding</th>
+                <th class="text-right" style="width: 100px;">Monthly</th>
+                <th class="text-right" style="width: 100px;">Annual</th>
+              </tr>
+            </thead>
+            <tbody id="companyFacilitiesBody">
+              <!-- Populated by JavaScript -->
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="5"><strong>TOTAL COMPANY COMMITMENT</strong></td>
+                <td class="text-right" id="totalCompanyMonthly">RM 0</td>
+                <td class="text-right" id="totalCompanyAnnual">RM 0</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- E2: Pending Applications -->
+    <div class="table-card" style="margin-bottom: 16px;">
+      <h4 style="font-size: 13px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+        <span class="badge" style="background: var(--warn-soft); color: var(--warn);"><span class="icon">E2</span><span>Pending Applications (Status A/T) - Check to include</span></span>
+      </h4>
+      <div class="note-box" style="margin-bottom: 12px;">
+        <strong>Note:</strong> Approved facilities pending disbursement. Uncheck if customer has declined or cancelled.
+      </div>
+      <div class="table-wrapper">
+        <table id="tableEPending">
+          <thead>
+            <tr>
+              <th style="width: 50px;">Include</th>
+              <th style="width: 40px;">No</th>
+              <th style="width: 160px;">Facility</th>
+              <th class="text-right" style="width: 110px;">Limit (RM)</th>
+              <th style="width: 80px;">Tenure</th>
+              <th class="text-right" style="width: 100px;">Monthly</th>
+              <th style="width: 80px;">Status</th>
+            </tr>
+          </thead>
+          <tbody id="pendingApplicationsBody">
+            <!-- Populated by JavaScript -->
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="5"><strong>PENDING SUBTOTAL</strong></td>
+              <td class="text-right" id="totalPendingMonthly">RM 0</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- E3: Manual Pending -->
+    <div class="table-card" style="margin-bottom: 16px;">
+      <h4 style="font-size: 13px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+        <span class="badge" style="background: var(--info-soft); color: var(--info);"><span class="icon">E3</span><span>Manual Pending (User Input)</span></span>
+      </h4>
+      <div class="note-box" style="margin-bottom: 12px;">
+        <strong>Note:</strong> For known applications not yet reflected in CCRIS. Enter details manually.
+      </div>
+      <div class="table-wrapper">
+        <table id="tableEManual">
+          <thead>
+            <tr>
+              <th style="width: 50px;">Include</th>
+              <th style="width: 40px;">No</th>
+              <th style="width: 160px;">Facility Name</th>
+              <th style="width: 120px;">Bank</th>
+              <th class="text-right" style="width: 110px;">Limit (RM)</th>
+              <th class="text-right" style="width: 100px;">Monthly</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-center"><input type="checkbox" id="manual1_include" onchange="recalculate()"></td>
+              <td>M1</td>
+              <td><input type="text" id="manual1_facility" placeholder="e.g. Term Loan" style="width:100%;"></td>
+              <td><input type="text" id="manual1_bank" placeholder="e.g. Maybank" style="width:100%;"></td>
+              <td><input type="number" id="manual1_limit" value="0" class="text-right" style="width:100%;"></td>
+              <td><input type="number" id="manual1_monthly" value="0" class="text-right" style="width:100%;" onchange="recalculate()"></td>
+            </tr>
+            <tr>
+              <td class="text-center"><input type="checkbox" id="manual2_include" onchange="recalculate()"></td>
+              <td>M2</td>
+              <td><input type="text" id="manual2_facility" placeholder="e.g. HP" style="width:100%;"></td>
+              <td><input type="text" id="manual2_bank" placeholder="e.g. CIMB" style="width:100%;"></td>
+              <td><input type="number" id="manual2_limit" value="0" class="text-right" style="width:100%;"></td>
+              <td><input type="number" id="manual2_monthly" value="0" class="text-right" style="width:100%;" onchange="recalculate()"></td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="5"><strong>MANUAL SUBTOTAL</strong></td>
+              <td class="text-right" id="totalManualMonthly">RM 0</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- E4: NLCI Company -->
+    <div class="table-card" style="margin-bottom: 16px;">
+      <h4 style="font-size: 13px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+        <span class="badge" style="background: var(--danger-soft); color: var(--danger);"><span class="icon">E4</span><span>NLCI Company (Non-Bank Lenders)</span></span>
+      </h4>
+      <div class="table-wrapper">
+        <table id="tableENlci">
+          <thead>
+            <tr>
+              <th style="width: 50px;">Include</th>
+              <th style="width: 40px;">No</th>
+              <th style="width: 160px;">Facility</th>
+              <th style="width: 120px;">Lender</th>
+              <th class="text-right" style="width: 110px;">Outstanding</th>
+              <th class="text-right" style="width: 100px;">Monthly</th>
+            </tr>
+          </thead>
+          <tbody id="nlciCompanyBody">
+            <!-- Populated by JavaScript -->
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="5"><strong>NLCI SUBTOTAL</strong></td>
+              <td class="text-right" id="totalNlciMonthly">RM 0</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Section E Summary -->
+    <div class="card" style="background: linear-gradient(135deg, var(--card-bg), var(--card-alt)); border: 1px solid var(--accent); padding: 16px;">
+      <h4 style="font-size: 13px; margin-bottom: 12px; color: var(--accent);">Section E Summary - Total Existing Commitment</h4>
+      <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px;">
+        <div style="text-align: center;">
+          <div style="font-size: 10px; color: var(--text-muted);">E1: Normalized</div>
+          <div style="font-size: 16px; font-weight: 600;" id="e1_summary">RM 0</div>
+        </div>
+        <div style="text-align: center;">
+          <div style="font-size: 10px; color: var(--text-muted);">E2: Pending</div>
+          <div style="font-size: 16px; font-weight: 600;" id="e2_summary">RM 0</div>
+        </div>
+        <div style="text-align: center;">
+          <div style="font-size: 10px; color: var(--text-muted);">E3: Manual</div>
+          <div style="font-size: 16px; font-weight: 600;" id="e3_summary">RM 0</div>
+        </div>
+        <div style="text-align: center;">
+          <div style="font-size: 10px; color: var(--text-muted);">E4: NLCI</div>
+          <div style="font-size: 16px; font-weight: 600;" id="e4_summary">RM 0</div>
+        </div>
+        <div style="text-align: center; background: var(--accent-soft); border-radius: var(--radius-sm); padding: 8px;">
+          <div style="font-size: 10px; color: var(--accent);">TOTAL EXISTING</div>
+          <div style="font-size: 20px; font-weight: 700; color: var(--accent);" id="totalExistingMonthly">RM 0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Directors Section (Hidden - v5.2 removes directors from DSCR) -->
+    <div id="legacyDirectorsSection" style="display: none;">
+      <div class="table-card directors-section">
+        <h4 style="font-size: 13px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+          <span class="directors-label"><span>Directors' Personal Facilities - EXCLUDED from DSCR</span></span>
+        </h4>
+        <div class="table-wrapper">
+          <table id="tableEDirectors">
+            <thead>
+              <tr>
+                <th style="width: 40px;">No</th>
+                <th style="width: 160px;">Facility</th>
+                <th style="width: 120px;">Bank</th>
+                <th class="text-right" style="width: 110px;">Limit (RM)</th>
+                <th class="text-right" style="width: 110px;">Outstanding</th>
+                <th class="text-right" style="width: 100px;">Monthly</th>
+                <th class="text-right" style="width: 100px;">Annual</th>
+              </tr>
+            </thead>
+            <tbody id="directorsFacilitiesBody">
+              <!-- Populated by JavaScript -->
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="5"><em>Reference Only (Not counted)</em></td>
+                <td class="text-right" id="totalDirectorsMonthly">RM 0</td>
+                <td class="text-right" id="totalDirectorsAnnual">RM 0</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       SECTION F: NEW/PROPOSED COMMITMENT
+       ============================================ -->
+  <section class="section">
+    <div class="section-header">
+      <div>
+        <div class="section-title"><span class="icon">&#10133;</span><span>Section F: New/Proposed Commitment</span></div>
+        <div class="section-subtitle">Enter proposed new facilities - Monthly calculated automatically</div>
+      </div>
+    </div>
+    
+    <!-- Revolving Facilities (OD, Trade, Credit Card, Revolving) -->
+    <div class="table-card" style="margin-bottom: 16px;">
+      <h4 style="font-size: 13px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+        <span class="badge badge-info"><span>Revolving Facilities (Interest on Limit x Utilization)</span></span>
+      </h4>
+      <div class="table-wrapper">
+        <table id="tableFRevolving">
+          <thead>
+            <tr>
+              <th style="width: 160px;">Facility Type</th>
+              <th class="text-right" style="width: 120px;">Limit (RM)</th>
+              <th class="text-center" style="width: 80px;">Rate %</th>
+              <th class="text-center" style="width: 80px;">Util %</th>
+              <th class="text-right" style="width: 110px;">Monthly</th>
+              <th class="text-right" style="width: 110px;">Annual</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Working Capital OD</td>
+              <td><input type="number" id="newOdLimit" value="0" step="1000" onchange="recalculate()"></td>
+              <td><input type="number" id="newOdRate" value="8.5" step="0.1" min="0" max="30" onchange="recalculate()" style="width: 70px;"></td>
+              <td><input type="number" id="newOdUtil" value="100" step="1" min="0" max="100" onchange="recalculate()" style="width: 70px;"></td>
+              <td class="text-right" id="newOdMonthly">RM 0</td>
+              <td class="text-right" id="newOdAnnual">RM 0</td>
+            </tr>
+            <tr>
+              <td>Trade Line</td>
+              <td><input type="number" id="newTradeLimit" value="0" step="1000" onchange="recalculate()"></td>
+              <td><input type="number" id="newTradeRate" value="8.0" step="0.1" min="0" max="30" onchange="recalculate()" style="width: 70px;"></td>
+              <td><input type="number" id="newTradeUtil" value="100" step="1" min="0" max="100" onchange="recalculate()" style="width: 70px;"></td>
+              <td class="text-right" id="newTradeMonthly">RM 0</td>
+              <td class="text-right" id="newTradeAnnual">RM 0</td>
+            </tr>
+            <tr>
+              <td>Credit Card</td>
+              <td><input type="number" id="newCcLimit" value="0" step="1000" onchange="recalculate()"></td>
+              <td><input type="number" id="newCcRate" value="18.0" step="0.1" min="0" max="30" onchange="recalculate()" style="width: 70px;"></td>
+              <td><input type="number" id="newCcUtil" value="100" step="1" min="0" max="100" onchange="recalculate()" style="width: 70px;"></td>
+              <td class="text-right" id="newCcMonthly">RM 0</td>
+              <td class="text-right" id="newCcAnnual">RM 0</td>
+            </tr>
+            <tr>
+              <td>Revolving Credit</td>
+              <td><input type="number" id="newRevLimit" value="0" step="1000" onchange="recalculate()"></td>
+              <td><input type="number" id="newRevRate" value="8.5" step="0.1" min="0" max="30" onchange="recalculate()" style="width: 70px;"></td>
+              <td><input type="number" id="newRevUtil" value="100" step="1" min="0" max="100" onchange="recalculate()" style="width: 70px;"></td>
+              <td class="text-right" id="newRevMonthly">RM 0</td>
+              <td class="text-right" id="newRevAnnual">RM 0</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="4"><strong>Subtotal Revolving</strong></td>
+              <td class="text-right" id="totalRevolvingMonthly">RM 0</td>
+              <td class="text-right" id="totalRevolvingAnnual">RM 0</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <div class="note-box" style="margin-top: 8px;">
+        <strong>Calculation:</strong> Annual = Limit x (Utilization %) x (Rate %). Most banks use 100% utilization for DSCR assessment.
+      </div>
+    </div>
+
+    <!-- Term Facilities (Term Loan, Hire Purchase, Other) -->
+    <div class="table-card">
+      <h4 style="font-size: 13px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+        <span class="badge badge-info"><span></span><span>Term Facilities (Amortized Repayment)</span></span>
+      </h4>
+      <div class="table-wrapper">
+        <table id="tableFTerm">
+          <thead>
+            <tr>
+              <th style="width: 140px;">Facility Type</th>
+              <th class="text-right" style="width: 110px;">Limit (RM)</th>
+              <th class="text-center" style="width: 70px;">Tenure</th>
+              <th class="text-center" style="width: 70px;">Rate %</th>
+              <th class="text-center" style="width: 110px;">Method</th>
+              <th class="text-right" style="width: 100px;">Monthly</th>
+              <th class="text-right" style="width: 100px;">Annual</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Term Loan 1</td>
+              <td><input type="number" id="newTl1Limit" value="0" step="1000" onchange="recalculate()"></td>
+              <td><input type="number" id="newTl1Tenure" value="5" min="1" max="30" onchange="recalculate()" style="width: 60px;"></td>
+              <td><input type="number" id="newTl1Rate" value="8.0" step="0.1" min="0" max="30" onchange="recalculate()" style="width: 60px;"></td>
+              <td>
+                <select id="newTl1Method" onchange="recalculate()" style="width: 100px;">
+                  <option value="reducing" selected>Reducing</option>
+                  <option value="flat">Flat Rate</option>
+                </select>
+              </td>
+              <td class="text-right" id="newTl1Monthly">RM 0</td>
+              <td class="text-right" id="newTl1Annual">RM 0</td>
+            </tr>
+            <tr>
+              <td>Term Loan 2</td>
+              <td><input type="number" id="newTl2Limit" value="0" step="1000" onchange="recalculate()"></td>
+              <td><input type="number" id="newTl2Tenure" value="5" min="1" max="30" onchange="recalculate()" style="width: 60px;"></td>
+              <td><input type="number" id="newTl2Rate" value="8.0" step="0.1" min="0" max="30" onchange="recalculate()" style="width: 60px;"></td>
+              <td>
+                <select id="newTl2Method" onchange="recalculate()" style="width: 100px;">
+                  <option value="reducing" selected>Reducing</option>
+                  <option value="flat">Flat Rate</option>
+                </select>
+              </td>
+              <td class="text-right" id="newTl2Monthly">RM 0</td>
+              <td class="text-right" id="newTl2Annual">RM 0</td>
+            </tr>
+            <tr>
+              <td>Hire Purchase 1</td>
+              <td><input type="number" id="newHp1Limit" value="0" step="1000" onchange="recalculate()"></td>
+              <td><input type="number" id="newHp1Tenure" value="7" min="1" max="9" onchange="recalculate()" style="width: 60px;"></td>
+              <td><input type="number" id="newHp1Rate" value="4.5" step="0.1" min="0" max="30" onchange="recalculate()" style="width: 60px;"></td>
+              <td>
+                <select id="newHp1Method" onchange="recalculate()" style="width: 100px;">
+                  <option value="reducing">Reducing</option>
+                  <option value="flat" selected>Flat Rate</option>
+                </select>
+              </td>
+              <td class="text-right" id="newHp1Monthly">RM 0</td>
+              <td class="text-right" id="newHp1Annual">RM 0</td>
+            </tr>
+            <tr>
+              <td>Hire Purchase 2</td>
+              <td><input type="number" id="newHp2Limit" value="0" step="1000" onchange="recalculate()"></td>
+              <td><input type="number" id="newHp2Tenure" value="7" min="1" max="9" onchange="recalculate()" style="width: 60px;"></td>
+              <td><input type="number" id="newHp2Rate" value="4.5" step="0.1" min="0" max="30" onchange="recalculate()" style="width: 60px;"></td>
+              <td>
+                <select id="newHp2Method" onchange="recalculate()" style="width: 100px;">
+                  <option value="reducing">Reducing</option>
+                  <option value="flat" selected>Flat Rate</option>
+                </select>
+              </td>
+              <td class="text-right" id="newHp2Monthly">RM 0</td>
+              <td class="text-right" id="newHp2Annual">RM 0</td>
+            </tr>
+            <tr>
+              <td>Other 1</td>
+              <td><input type="number" id="newOther1Limit" value="0" step="1000" onchange="recalculate()"></td>
+              <td><input type="number" id="newOther1Tenure" value="5" min="1" max="30" onchange="recalculate()" style="width: 60px;"></td>
+              <td><input type="number" id="newOther1Rate" value="8.0" step="0.1" min="0" max="30" onchange="recalculate()" style="width: 60px;"></td>
+              <td>
+                <select id="newOther1Method" onchange="recalculate()" style="width: 100px;">
+                  <option value="reducing" selected>Reducing</option>
+                  <option value="flat">Flat Rate</option>
+                </select>
+              </td>
+              <td class="text-right" id="newOther1Monthly">RM 0</td>
+              <td class="text-right" id="newOther1Annual">RM 0</td>
+            </tr>
+            <tr>
+              <td>Other 2</td>
+              <td><input type="number" id="newOther2Limit" value="0" step="1000" onchange="recalculate()"></td>
+              <td><input type="number" id="newOther2Tenure" value="5" min="1" max="30" onchange="recalculate()" style="width: 60px;"></td>
+              <td><input type="number" id="newOther2Rate" value="8.0" step="0.1" min="0" max="30" onchange="recalculate()" style="width: 60px;"></td>
+              <td>
+                <select id="newOther2Method" onchange="recalculate()" style="width: 100px;">
+                  <option value="reducing" selected>Reducing</option>
+                  <option value="flat">Flat Rate</option>
+                </select>
+              </td>
+              <td class="text-right" id="newOther2Monthly">RM 0</td>
+              <td class="text-right" id="newOther2Annual">RM 0</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="5"><strong>Subtotal Term Facilities</strong></td>
+              <td class="text-right" id="totalTermMonthly">RM 0</td>
+              <td class="text-right" id="totalTermAnnual">RM 0</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <div class="note-box" style="margin-top: 8px;">
+        <strong>Reducing Balance:</strong> Standard amortization (effective rate). <strong>Flat Rate:</strong> Interest calculated on original principal throughout tenure. HP in Malaysia typically uses flat rate (4-5% flat  7-9% effective).
+      </div>
+    </div>
+
+    <!-- Grand Total -->
+    <div class="table-card" style="margin-top: 16px; background: var(--grand-total-bg);">
+      <div class="table-wrapper">
+        <table>
+          <tbody>
+            <tr style="background: transparent;">
+              <td style="width: 70%; font-size: 14px;"><strong></strong></td>
+              <td class="text-right" style="width: 15%; font-size: 14px;"><strong id="totalNewMonthly">RM 0</strong></td>
+              <td class="text-right" style="width: 15%; font-size: 14px;"><strong id="totalNewAnnual">RM 0</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       SECTION G: TOTAL DEBT SERVICE
+       ============================================ -->
+  <section class="section">
+    <div class="section-header">
+      <div>
+        <div class="section-title"><span>Section G: Total Debt Service</span></div>
+        <div class="section-subtitle">Combined existing and new commitments</div>
+      </div>
+    </div>
+    <div class="table-card">
+      <div class="table-wrapper">
+        <table id="tableG">
+          <thead>
+            <tr>
+              <th style="width: 300px;">Component</th>
+              <th class="text-right" style="width: 150px;">Monthly (RM)</th>
+              <th class="text-right" style="width: 150px;">Annual (RM)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Existing Commitment (Company)</td>
+              <td class="text-right" id="dsExistMonthly">RM 0</td>
+              <td class="text-right" id="dsExistAnnual">RM 0</td>
+            </tr>
+            <tr>
+              <td>New/Proposed Commitment</td>
+              <td class="text-right" id="dsNewMonthly">RM 0</td>
+              <td class="text-right" id="dsNewAnnual">RM 0</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td><strong>TOTAL DEBT SERVICE</strong></td>
+              <td class="text-right" id="dsTotalMonthly">RM 0</td>
+              <td class="text-right" id="dsTotalAnnual">RM 0</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       SECTION H: DSCR ANALYSIS (Multi-Bank)
+       ============================================ -->
+  <section class="section">
+    <div class="section-header">
+      <div>
+        <div class="section-title"><span>Section H: Multi-Bank DSCR Analysis</span></div>
+        <div class="section-subtitle">Assessment against Malaysian bank thresholds</div>
+      </div>
+    </div>
+    <div class="table-card">
+      <div class="table-wrapper">
+        <table id="tableH">
+          <thead>
+            <tr>
+              <th style="width: 160px;">Bank</th>
+              <th class="text-center" style="width: 90px;">Min DSCR</th>
+              <th class="text-center" style="width: 100px;">Base</th>
+              <th class="text-center" style="width: 100px;">P1</th>
+              <th class="text-center" style="width: 100px;">P2</th>
+              <th class="text-center" style="width: 100px;">P3</th>
+              <th class="text-center" style="width: 120px;">Status</th>
+            </tr>
+          </thead>
+          <tbody id="dscrAnalysisBody">
+            <!-- Populated by JavaScript -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Bank Recommendation Grid -->
+    <h4 style="font-size: 13px; margin: 20px 0 12px; color: var(--text-soft);"></h4>
+    <div class="bank-grid" id="bankGrid">
+      <!-- Populated by JavaScript -->
+    </div>
+  </section>
+
+  <!-- ============================================
+       SENSITIVITY ANALYSIS
+       ============================================ -->
+  <section class="section">
+    <div class="section-header">
+      <div>
+        <div class="section-title"><span>Sensitivity Analysis</span></div>
+        <div class="section-subtitle">DSCR impact under different scenarios</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sensitivity-grid" id="sensitivityGrid">
+        <!-- Populated by JavaScript -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       BREAKEVEN & DEBT CAPACITY CALCULATORS
+       ============================================ -->
+  <section class="section">
+    <div class="two-col">
+      <!-- Breakeven Calculator -->
+      <div class="card">
+        <h2><span class="icon">&#9878;</span><span>Breakeven Calculator</span></h2>
+        <div class="calc-box">
+          <div class="calc-row">
+            <div class="calc-label">Min EBITDA for 1.25x DSCR</div>
+            <div class="calc-value highlight" id="beMinEbitda">RM 0</div>
+          </div>
+          <div class="calc-row">
+            <div class="calc-label">Required EBITDA Margin</div>
+            <div class="calc-value" id="beMinMargin">0%</div>
+          </div>
+          <div class="calc-row">
+            <div class="calc-label">Max Debt Service at Current EBITDA</div>
+            <div class="calc-value" id="beMaxDs">RM 0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Debt Capacity Calculator -->
+      <div class="card">
+        <h2><span>Debt Capacity Calculator</span></h2>
+        <div class="calc-box">
+          <div class="calc-row">
+            <div class="calc-label">P1 EBITDA</div>
+            <div class="calc-value" id="dcEbitda">RM 0</div>
+          </div>
+          <div class="calc-row">
+            <div class="calc-label">Max DS @ 1.25x</div>
+            <div class="calc-value" id="dcMaxDs">RM 0</div>
+          </div>
+          <div class="calc-row">
+            <div class="calc-label">Less: Existing Commitment</div>
+            <div class="calc-value" id="dcExisting">RM 0</div>
+          </div>
+          <div class="calc-row">
+            <div class="calc-label">Available for New Facility</div>
+            <div class="calc-value highlight" id="dcAvailable">RM 0</div>
+          </div>
+          <div class="calc-row">
+            <div class="calc-label">Equivalent OD Limit @ 9%</div>
+            <div class="calc-value" id="dcOdLimit">RM 0</div>
+          </div>
+          <div class="calc-row">
+            <div class="calc-label">Equivalent TL (5yr @ 9%)</div>
+            <div class="calc-value" id="dcTlLimit">RM 0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       SCENARIO COMPARISON
+       ============================================ -->
+  <section class="section">
+    <div class="section-header">
+      <div>
+        <div class="section-title"><span>Scenario Comparison</span></div>
+        <div class="section-subtitle">Compare current vs with new facility</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="scenario-grid">
+        <div class="scenario-box scenario-a">
+          <div class="scenario-title">Scenario A: Current (Existing Only)</div>
+          <div class="calc-box" style="background: transparent; border: none; padding: 0;">
+            <div class="calc-row">
+              <div class="calc-label">Total Debt Service</div>
+              <div class="calc-value" id="scaDs">RM 0</div>
+            </div>
+            <div class="calc-row">
+              <div class="calc-label">P1 DSCR</div>
+              <div class="calc-value" id="scaDscr">0.00x</div>
+            </div>
+            <div class="calc-row">
+              <div class="calc-label">Status</div>
+              <div id="scaStatus"><span class="dscr-badge">-</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="scenario-box scenario-b">
+          <div class="scenario-title">Scenario B: With New Facility</div>
+          <div class="calc-box" style="background: transparent; border: none; padding: 0;">
+            <div class="calc-row">
+              <div class="calc-label">New Facility Amount</div>
+              <div class="calc-value" id="scbNewFacility">RM 0</div>
+            </div>
+            <div class="calc-row">
+              <div class="calc-label">Total Debt Service</div>
+              <div class="calc-value" id="scbDs">RM 0</div>
+            </div>
+            <div class="calc-row">
+              <div class="calc-label">P1 DSCR</div>
+              <div class="calc-value" id="scbDscr">0.00x</div>
+            </div>
+            <div class="calc-row">
+              <div class="calc-label">Status</div>
+              <div id="scbStatus"><span class="dscr-badge">-</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       DATA QUALITY ASSURANCE
+       ============================================ -->
+  <section class="section">
+    <div class="section-header">
+      <div>
+        <div class="section-title"><span class="icon">&#9989;</span><span>Data Quality Assurance</span></div>
+        <div class="section-subtitle">Verification checklist</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="qa-grid">
+        <div class="qa-item">
+          <div class="qa-label">DSCR Formula</div>
+          <div class="qa-value">EBITDA / Total DS (No Tax Deduction)</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-label">Directors' Facilities</div>
+          <div class="qa-value">Excluded from DSCR calculation</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-label">Bank Thresholds</div>
+          <div class="qa-value">1.25x (1.30x for StanChart)</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-label">Base Year Source</div>
+          <div class="qa-value" id="qaBaseSource">-</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-label">Projection Period</div>
+          <div class="qa-value">3 Years (P1-P3)</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-label">Revolving Facilities</div>
+          <div class="qa-value">Limit x Util% x Rate%</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-label">Term Loan Calculation</div>
+          <div class="qa-value">Reducing Balance / Flat Rate (User Selectable)</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-label">HP Default Method</div>
+          <div class="qa-value">Flat Rate (Malaysian Standard)</div>
+        </div>
+        <div class="qa-item">
+          <div class="qa-label">Interest Rates</div>
+          <div class="qa-value">User Adjustable per Facility</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       FOOTER
+       ============================================ -->
+  <footer>
+    <div>Prepared for [COMPANY_NAME] - DSCR CALCULATOR v5.2</div>
+    <div>Generated: <span id="generatedDate"></span> - Prepared by: Kredit Lab</div>
+  </footer>
+
+</div>
+
+<!-- ============================================
+     SAVED DATA (Editable values - updated on save)
+     ============================================ -->
+<script type="application/json" id="saved-data">
+{
+  "version": "5.3",
+  "approach": "option_c_normalized",
+  "savedDate": null,
+  "settings": {
+    "baseYear": "fy3"
+  },
+  "projectionInputs": {
+    "sg": [10, 8, 5],
+    "em": [10, 10, 10],
+    "cos": [62, 62, 62],
+    "opex": [25, 25, 25],
+    "deb": [30, 30, 30],
+    "stk": [0, 0, 0],
+    "cred": [30, 30, 30]
+  },
+  "companyFacilitiesMonthly": [],
+  "existingCommitmentState": {
+    "pendingInclude": [],
+    "manualPending": [
+      { "facility": "", "bank": "", "limit": 0, "monthly": 0, "include": false },
+      { "facility": "", "bank": "", "limit": 0, "monthly": 0, "include": false }
+    ],
+    "nlciInclude": []
+  },
+  "newFacilities": {
+    "od": { "limit": 0, "rate": 8.5, "util": 100 },
+    "trade": { "limit": 0, "rate": 8.0, "util": 100 },
+    "cc": { "limit": 0, "rate": 18.0, "util": 100 },
+    "rev": { "limit": 0, "rate": 8.5, "util": 100 },
+    "tl1": { "limit": 0, "tenure": 5, "rate": 8.0, "method": "reducing" },
+    "tl2": { "limit": 0, "tenure": 5, "rate": 8.0, "method": "reducing" },
+    "hp1": { "limit": 0, "tenure": 7, "rate": 4.5, "method": "flat" },
+    "hp2": { "limit": 0, "tenure": 7, "rate": 4.5, "method": "flat" },
+    "other1": { "limit": 0, "tenure": 5, "rate": 8.0, "method": "reducing" },
+    "other2": { "limit": 0, "tenure": 5, "rate": 8.0, "method": "reducing" }
+  }
+}
+</script>
+
+<!-- ============================================
+     JAVASCRIPT
+     ============================================ -->
+<script>
+  // ============================================
+  // CONFIGURATION - [COMPANY_NAME]
+  // ============================================
+  // ============================================
+  // CONFIGURATION - POPULATE WITH CLIENT DATA
+  // ============================================
+  const CONFIG = {
+    companyName: '[COMPANY_NAME]',
+    regNo: '[REG_NO]',
+    
+    // ========================================
+    // BASE YEAR FINANCIALS
+    // Source: Financial Statement Analysis HTML
+    // ========================================
+    baseYear: {
+      fy1: {
+        period: 'FY1',
+        revenue: 0,
+        cos: 0,
+        gp: 0,
+        opex: 0,
+        ebitda: 0,
+        depreciation: 0,
+        finCosts: 0,
+        pbt: 0,
+        tax: 0,
+        netProfit: 0
+      },
+      fy2: {
+        period: 'FY2',
+        revenue: 0,
+        cos: 0,
+        gp: 0,
+        opex: 0,
+        ebitda: 0,
+        depreciation: 0,
+        finCosts: 0,
+        pbt: 0,
+        tax: 0,
+        netProfit: 0
+      },
+      fy3: {
+        period: 'FY3',
+        revenue: 0,
+        cos: 0,
+        gp: 0,
+        opex: 0,
+        ebitda: 0,
+        depreciation: 0,
+        finCosts: 0,
+        pbt: 0,
+        tax: 0,
+        netProfit: 0
+      }
+    },
+    
+    // ========================================
+    // EXISTING COMPANY FACILITIES (v5.1 Legacy)
+    // Source: Commitment Analysis HTML
+    // These ARE counted in DSCR calculation
+    // ========================================
+    companyFacilities: [
+      // Example format:
+      // { no: 1, facility: 'Term Loan', bank: 'RHB', limit: 500000, outstanding: 350000, monthly: 10000 }
+    ],
+    
+    // ========================================
+    // v5.2 - NORMALIZED COMMITMENT
+    // Source: Commitment Analysis v3.1 Section 2
+    // ========================================
+    existingCommitment: {
+      monthlyByBank: {
+        rhb: 0,
+        maybank: 0,
+        cimb: 0,
+        stanchart: 0,
+        smebank: 0,
+        brakyat: 0
+      },
+      normalized: 0,  // MAX of above values
+      normalizedMethod: 'maximum'
+    },
+    
+    // ========================================
+    // v5.2 - PENDING APPLICATIONS (Section 4A)
+    // Status A = Approved, T = To be disbursed
+    // ========================================
+    pendingApplications: [
+      // Example format:
+      // { no: 1, facility: 'Term Loan-i', limit: 500000, tenure: '5 years', monthly: 10500, status: 'A' }
+    ],
+    
+    // ========================================
+    // v5.2 - NLCI COMPANY (Section 5)
+    // Non-Bank Credit Institutions
+    // ========================================
+    nlciCompany: [
+      // Example format:
+      // { no: 1, facility: 'Leasing', lender: 'AEON Credit', outstanding: 50000, monthly: 1500 }
+    ],
+    
+    // ========================================
+    // DIRECTORS' PERSONAL FACILITIES (v5.1 Legacy)
+    // These are EXCLUDED from DSCR (reference only)
+    // NOTE: v5.2 removes directors entirely
+    // ========================================
+    directorsFacilities: [
+      // Example format:
+      // { no: 1, facility: 'Housing Loan', bank: 'CIMB', limit: 500000, outstanding: 400000, monthly: 2500, director: 'Director Name' }
+    ],
+    
+    // Existing WC Facility (for WCR calculation)
+    existingWcFacility: 0,
+    
+    // ========================================
+    // BANK THRESHOLDS (Standard - Do Not Change)
+    // ========================================
+    banks: [
+      { code: 'rhb', name: 'RHB Bank', minDscr: 1.25 },
+      { code: 'mbb', name: 'Maybank', minDscr: 1.25 },
+      { code: 'cimb', name: 'CIMB Bank', minDscr: 1.25 },
+      { code: 'sc', name: 'Standard Chartered', minDscr: 1.30 },
+      { code: 'sme', name: 'SME Bank', minDscr: 1.25 },
+      { code: 'br', name: 'Bank Rakyat', minDscr: 1.25 }
+    ],
+    
+    // ========================================
+    // PRESET SCENARIOS
+    // Adjust based on industry/business type
+    // ========================================
+    presets: {
+      conservative: {
+        sg: [5, 3, 2],       // Sales Growth %
+        em: [8, 8, 8],       // EBITDA Margin %
+        cos: [65, 65, 65],   // Cost of Sales % (tutor wages)
+        opex: [25, 25, 25],  // Operating Expenses %
+        deb: [30, 30, 30],   // Debtors Days (prepaid model)
+        stk: [0, 0, 0],      // Stock Days (service business)
+        cred: [30, 30, 30]   // Creditors Days
+      },
+      base: {
+        sg: [10, 8, 5],      // Moderate growth
+        em: [10, 10, 10],    // EBITDA Margin %
+        cos: [62, 62, 62],   // Cost of Sales %
+        opex: [25, 25, 25],  // Operating Expenses %
+        deb: [30, 30, 30],   // Debtors Days
+        stk: [0, 0, 0],      // Stock Days (service business)
+        cred: [30, 30, 30]   // Creditors Days
+      },
+      aggressive: {
+        sg: [20, 15, 12],    // Higher growth (strong YTD performance)
+        em: [12, 13, 14],    // Improving margins
+        cos: [58, 56, 55],   // Improving efficiency
+        opex: [22, 20, 18],  // Cost optimization
+        deb: [30, 30, 30],   // Debtors Days
+        stk: [0, 0, 0],      // Stock Days (service business)
+        cred: [30, 30, 30]   // Creditors Days
+      }
+    },
+    
+    // ========================================
+    // SENSITIVITY SCENARIOS
+    // ========================================
+    sensitivity: [
+      { name: 'Worst Case', sg: -10, em: 5 },
+      { name: 'Conservative', sg: 10, em: 8 },
+      { name: 'Base Case', sg: 'current', em: 'current' },
+      { name: 'Aggressive', sg: 75, em: 15 }
+    ]
+  };
+
+  // ============================================
+  // UTILITY FUNCTIONS
+  // ============================================
+  function formatRM(value) {
+    if (value === null || value === undefined || isNaN(value)) return 'RM 0';
+    return 'RM ' + value.toLocaleString('en-MY', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  }
+
+  function formatPercent(value) {
+    if (value === null || value === undefined || isNaN(value)) return '0%';
+    return value.toFixed(1) + '%';
+  }
+
+  function formatDscr(value) {
+    if (value === null || value === undefined || isNaN(value) || !isFinite(value)) return '0.00x';
+    return value.toFixed(2) + 'x';
+  }
+
+  function getInputValue(id) {
+    const el = document.getElementById(id);
+    return el ? parseFloat(el.value) || 0 : 0;
+  }
+
+  function setInputValue(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.value = value;
+  }
+
+  function setText(id, text) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  }
+
+  function setHTML(id, html) {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = html;
+  }
+
+  // ============================================
+  // SAVED DATA FUNCTIONS
+  // ============================================
+  function getSavedData() {
+    try {
+      const el = document.getElementById('saved-data');
+      return el ? JSON.parse(el.textContent) : null;
+    } catch (e) {
+      console.error('Error parsing saved data:', e);
+      return null;
+    }
+  }
+
+  function updateSavedData(data) {
+    const el = document.getElementById('saved-data');
+    if (el) {
+      data.savedDate = new Date().toISOString();
+      el.textContent = JSON.stringify(data, null, 2);
+    }
+  }
+
+  function collectCurrentState() {
+    return {
+      version: "5.3",
+      savedDate: new Date().toISOString(),
+      settings: {
+        baseYear: document.getElementById('baseYearSelect').value || 'fy3'
+      },
+      projectionInputs: {
+        sg: [getInputValue('sg_p1'), getInputValue('sg_p2'), getInputValue('sg_p3')],
+        em: [getInputValue('em_p1'), getInputValue('em_p2'), getInputValue('em_p3')],
+        cos: [getInputValue('cos_p1'), getInputValue('cos_p2'), getInputValue('cos_p3')],
+        opex: [getInputValue('opex_p1'), getInputValue('opex_p2'), getInputValue('opex_p3')],
+        deb: [getInputValue('deb_p1'), getInputValue('deb_p2'), getInputValue('deb_p3')],
+        stk: [getInputValue('stk_p1'), getInputValue('stk_p2'), getInputValue('stk_p3')],
+        cred: [getInputValue('cred_p1'), getInputValue('cred_p2'), getInputValue('cred_p3')]
+      },
+      companyFacilitiesMonthly: CONFIG.companyFacilities.map(f => f.monthly),
+      newFacilities: {
+        od: { limit: getInputValue('newOdLimit'), rate: getInputValue('newOdRate'), util: getInputValue('newOdUtil') },
+        trade: { limit: getInputValue('newTradeLimit'), rate: getInputValue('newTradeRate'), util: getInputValue('newTradeUtil') },
+        cc: { limit: getInputValue('newCcLimit'), rate: getInputValue('newCcRate'), util: getInputValue('newCcUtil') },
+        rev: { limit: getInputValue('newRevLimit'), rate: getInputValue('newRevRate'), util: getInputValue('newRevUtil') },
+        tl1: { limit: getInputValue('newTl1Limit'), tenure: getInputValue('newTl1Tenure'), rate: getInputValue('newTl1Rate'), method: document.getElementById('newTl1Method').value },
+        tl2: { limit: getInputValue('newTl2Limit'), tenure: getInputValue('newTl2Tenure'), rate: getInputValue('newTl2Rate'), method: document.getElementById('newTl2Method').value },
+        hp1: { limit: getInputValue('newHp1Limit'), tenure: getInputValue('newHp1Tenure'), rate: getInputValue('newHp1Rate'), method: document.getElementById('newHp1Method').value },
+        hp2: { limit: getInputValue('newHp2Limit'), tenure: getInputValue('newHp2Tenure'), rate: getInputValue('newHp2Rate'), method: document.getElementById('newHp2Method').value },
+        other1: { limit: getInputValue('newOther1Limit'), tenure: getInputValue('newOther1Tenure'), rate: getInputValue('newOther1Rate'), method: document.getElementById('newOther1Method').value },
+        other2: { limit: getInputValue('newOther2Limit'), tenure: getInputValue('newOther2Tenure'), rate: getInputValue('newOther2Rate'), method: document.getElementById('newOther2Method').value }
+      }
+    };
+  }
+
+  function restoreFromSavedData(data) {
+    if (!data) return;
+    
+    // Restore settings
+    if (data.settings) {
+      const sel = document.getElementById('baseYearSelect');
+      if (sel && data.settings.baseYear) {
+        sel.value = data.settings.baseYear;
+      }
+    }
+    
+    // Restore projection inputs
+    if (data.projectionInputs) {
+      const p = data.projectionInputs;
+      ['sg', 'em', 'cos', 'opex', 'deb', 'stk', 'cred'].forEach(key => {
+        if (p[key]) {
+          for (let i = 0; i < 3; i++) {
+            setInputValue(`${key}_p${i + 1}`, p[key][i]);
+          }
+        }
+      });
+    }
+    
+    // Restore company facilities monthly values
+    if (data.companyFacilitiesMonthly && CONFIG.companyFacilities) {
+      data.companyFacilitiesMonthly.forEach((monthly, idx) => {
+        if (CONFIG.companyFacilities[idx]) {
+          CONFIG.companyFacilities[idx].monthly = monthly;
+        }
+      });
+    }
+    
+    // Restore new facilities
+    if (data.newFacilities) {
+      const nf = data.newFacilities;
+      // Revolving
+      if (nf.od) { setInputValue('newOdLimit', nf.od.limit); setInputValue('newOdRate', nf.od.rate); setInputValue('newOdUtil', nf.od.util); }
+      if (nf.trade) { setInputValue('newTradeLimit', nf.trade.limit); setInputValue('newTradeRate', nf.trade.rate); setInputValue('newTradeUtil', nf.trade.util); }
+      if (nf.cc) { setInputValue('newCcLimit', nf.cc.limit); setInputValue('newCcRate', nf.cc.rate); setInputValue('newCcUtil', nf.cc.util); }
+      if (nf.rev) { setInputValue('newRevLimit', nf.rev.limit); setInputValue('newRevRate', nf.rev.rate); setInputValue('newRevUtil', nf.rev.util); }
+      // Term
+      if (nf.tl1) { setInputValue('newTl1Limit', nf.tl1.limit); setInputValue('newTl1Tenure', nf.tl1.tenure); setInputValue('newTl1Rate', nf.tl1.rate); document.getElementById('newTl1Method').value = nf.tl1.method; }
+      if (nf.tl2) { setInputValue('newTl2Limit', nf.tl2.limit); setInputValue('newTl2Tenure', nf.tl2.tenure); setInputValue('newTl2Rate', nf.tl2.rate); document.getElementById('newTl2Method').value = nf.tl2.method; }
+      if (nf.hp1) { setInputValue('newHp1Limit', nf.hp1.limit); setInputValue('newHp1Tenure', nf.hp1.tenure); setInputValue('newHp1Rate', nf.hp1.rate); document.getElementById('newHp1Method').value = nf.hp1.method; }
+      if (nf.hp2) { setInputValue('newHp2Limit', nf.hp2.limit); setInputValue('newHp2Tenure', nf.hp2.tenure); setInputValue('newHp2Rate', nf.hp2.rate); document.getElementById('newHp2Method').value = nf.hp2.method; }
+      if (nf.other1) { setInputValue('newOther1Limit', nf.other1.limit); setInputValue('newOther1Tenure', nf.other1.tenure); setInputValue('newOther1Rate', nf.other1.rate); document.getElementById('newOther1Method').value = nf.other1.method; }
+      if (nf.other2) { setInputValue('newOther2Limit', nf.other2.limit); setInputValue('newOther2Tenure', nf.other2.tenure); setInputValue('newOther2Rate', nf.other2.rate); document.getElementById('newOther2Method').value = nf.other2.method; }
+    }
+  }
+
+  // DSCR Status determination
+  function getDscrStatus(dscr) {
+    if (dscr >= 1.50) return { class: 'strong', text: ' STRONG', color: '#10b981' };
+    if (dscr >= 1.25) return { class: 'acceptable', text: ' PASS', color: '#34d399' };
+    if (dscr >= 1.00) return { class: 'marginal', text: ' MARGINAL', color: '#f59e0b' };
+    return { class: 'fail', text: 'X FAIL', color: '#ef4444' };
+  }
+
+  // Amortization calculation
+  function calculateAmortization(principal, tenureYears, annualRate) {
+    if (!principal || principal <= 0) return 0;
+    const r = annualRate / 100 / 12;
+    const n = tenureYears * 12;
+    if (r === 0) return principal / n;
+    const monthly = principal * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+    return monthly * 12; // Return annual
+  }
+
+  // ============================================
+  // MAIN CALCULATION FUNCTION
+  // ============================================
+  function recalculate() {
+    // Get base year selection
+    const baseYearKey = document.getElementById('baseYearSelect').value || 'fy3';
+    const baseData = CONFIG.baseYear[baseYearKey];
+
+    // Determine base year values
+    let baseRevenue, baseCos, baseGp, baseOpex, baseEbitda;
+
+    baseRevenue = baseData.revenue;
+    baseCos = baseData.cos;
+    baseGp = baseData.gp;
+    baseOpex = baseData.opex;
+    baseEbitda = baseData.ebitda;
+    setText('baseYearLabel', baseData.period);
+    setText('qaBaseSource', baseData.period);
+
+    // Get projection inputs
+    const sg = [getInputValue('sg_p1'), getInputValue('sg_p2'), getInputValue('sg_p3')];
+    const em = [getInputValue('em_p1'), getInputValue('em_p2'), getInputValue('em_p3')];
+    const cos = [getInputValue('cos_p1'), getInputValue('cos_p2'), getInputValue('cos_p3')];
+    const opex = [getInputValue('opex_p1'), getInputValue('opex_p2'), getInputValue('opex_p3')];
+    const deb = [getInputValue('deb_p1'), getInputValue('deb_p2'), getInputValue('deb_p3')];
+    const stk = [getInputValue('stk_p1'), getInputValue('stk_p2'), getInputValue('stk_p3')];
+    const cred = [getInputValue('cred_p1'), getInputValue('cred_p2'), getInputValue('cred_p3')];
+
+    // Calculate projections
+    const projSales = [baseRevenue];
+    const projCos = [baseCos];
+    const projGp = [baseGp];
+    const projOpex = [baseOpex];
+    const projEbitda = [baseEbitda];
+
+    for (let i = 0; i < 3; i++) {
+      const prevSales = projSales[i];
+      const sales = prevSales * (1 + sg[i] / 100);
+      projSales.push(sales);
+      projCos.push(sales * cos[i] / 100);
+      projGp.push(sales - projCos[i + 1]);
+      projOpex.push(sales * opex[i] / 100);
+      projEbitda.push(sales * em[i] / 100);
+    }
+
+    // Update Section C
+    setText('projSalesBase', formatRM(projSales[0]));
+    setText('projSalesP1', formatRM(projSales[1]));
+    setText('projSalesP2', formatRM(projSales[2]));
+    setText('projSalesP3', formatRM(projSales[3]));
+
+    setText('projGrowthP1', formatPercent(sg[0]));
+    setText('projGrowthP2', formatPercent(sg[1]));
+    setText('projGrowthP3', formatPercent(sg[2]));
+
+    setText('projCosBase', formatRM(projCos[0]));
+    setText('projCosP1', formatRM(projCos[1]));
+    setText('projCosP2', formatRM(projCos[2]));
+    setText('projCosP3', formatRM(projCos[3]));
+
+    setText('projGpBase', formatRM(projGp[0]));
+    setText('projGpP1', formatRM(projGp[1]));
+    setText('projGpP2', formatRM(projGp[2]));
+    setText('projGpP3', formatRM(projGp[3]));
+
+    setText('projOpexBase', formatRM(projOpex[0]));
+    setText('projOpexP1', formatRM(projOpex[1]));
+    setText('projOpexP2', formatRM(projOpex[2]));
+    setText('projOpexP3', formatRM(projOpex[3]));
+
+    setText('projEbitdaBase', formatRM(projEbitda[0]));
+    setText('projEbitdaP1', formatRM(projEbitda[1]));
+    setText('projEbitdaP2', formatRM(projEbitda[2]));
+    setText('projEbitdaP3', formatRM(projEbitda[3]));
+
+    const ebitdaMarginBase = projSales[0] > 0 ? (projEbitda[0] / projSales[0] * 100) : 0;
+    setText('projEbitdaPBase', formatPercent(ebitdaMarginBase));
+    setText('projEbitdaPP1', formatPercent(em[0]));
+    setText('projEbitdaPP2', formatPercent(em[1]));
+    setText('projEbitdaPP3', formatPercent(em[2]));
+
+    // Calculate WCR
+    calculateWCR(projSales, projCos, deb, stk, cred);
+
+    // Calculate debt service
+    const existingAnnual = calculateExistingCommitment();
+    const newAnnual = calculateNewCommitment();
+    const totalAnnual = existingAnnual + newAnnual;
+
+    // Update Section G
+    setText('dsExistMonthly', formatRM(existingAnnual / 12));
+    setText('dsExistAnnual', formatRM(existingAnnual));
+    setText('dsNewMonthly', formatRM(newAnnual / 12));
+    setText('dsNewAnnual', formatRM(newAnnual));
+    setText('dsTotalMonthly', formatRM(totalAnnual / 12));
+    setText('dsTotalAnnual', formatRM(totalAnnual));
+
+    // Calculate DSCR for each period
+    const dscr = [];
+    for (let i = 0; i <= 3; i++) {
+      dscr.push(totalAnnual > 0 ? projEbitda[i] / totalAnnual : 0);
+    }
+
+    // Update DSCR Analysis (Section H)
+    updateDscrAnalysis(dscr);
+
+    // Update Executive Dashboard
+    updateDashboard(projEbitda, totalAnnual, dscr, baseRevenue, em[0]);
+
+    // Update Sensitivity Analysis
+    updateSensitivity(baseRevenue, sg[0], em[0], totalAnnual);
+
+    // Update Breakeven & Debt Capacity
+    updateBreakeven(projEbitda[1], totalAnnual, projSales[1], existingAnnual);
+
+    // Update Scenario Comparison
+    updateScenarioComparison(projEbitda[1], existingAnnual, newAnnual);
+
+    // Update EBITDA Trend Chart
+    updateTrendChart(projEbitda);
+  }
+
+  // ============================================
+  // WCR CALCULATION
+  // ============================================
+  function calculateWCR(projSales, projCos, deb, stk, cred) {
+    for (let i = 0; i <= 3; i++) {
+      const suffix = i === 0 ? 'Base' : `P${i}`;
+      const sales = projSales[i];
+      const cogs = projCos[i];
+      
+      const debDays = i === 0 ? '-' : deb[i - 1];
+      const stkDays = i === 0 ? '-' : stk[i - 1];
+      const credDays = i === 0 ? '-' : cred[i - 1];
+      
+      const debRm = i === 0 ? 0 : (debDays / 365) * sales;
+      const stkRm = i === 0 ? 0 : (stkDays / 365) * cogs;
+      const credRm = i === 0 ? 0 : (credDays / 365) * cogs;
+      
+      const ccc = i === 0 ? '-' : `${debDays + stkDays - credDays} days`;
+      const grossWcr = debRm + stkRm - credRm;
+      const netWcr = grossWcr - CONFIG.existingWcFacility;
+
+      setText(`wcrSales${suffix}`, formatRM(sales));
+      setText(`wcrCogs${suffix}`, formatRM(cogs));
+      setText(`wcrDeb${suffix}`, i === 0 ? '-' : debDays);
+      setText(`wcrStk${suffix}`, i === 0 ? '-' : stkDays);
+      setText(`wcrCred${suffix}`, i === 0 ? '-' : credDays);
+      setText(`wcrDebRm${suffix}`, formatRM(debRm));
+      setText(`wcrStkRm${suffix}`, formatRM(stkRm));
+      setText(`wcrCredRm${suffix}`, formatRM(credRm));
+      setText(`wcrCcc${suffix}`, ccc);
+      setText(`wcrGross${suffix}`, formatRM(grossWcr));
+      setText(`wcrExist${suffix}`, formatRM(CONFIG.existingWcFacility));
+      setText(`wcrNet${suffix}`, formatRM(netWcr));
+    }
+  }
+
+  // ============================================
+  // EXISTING COMMITMENT CALCULATION (v5.2)
+  // ============================================
+  function calculateExistingCommitment() {
+    let totalExisting = 0;
+    
+    // Check if v5.2 structure exists
+    const isV52 = CONFIG.existingCommitment && CONFIG.existingCommitment.normalized > 0;
+    
+    if (isV52) {
+      // === v5.2 Mode: Normalized Commitment ===
+      const normalized = CONFIG.existingCommitment.normalized;
+      const byBank = CONFIG.existingCommitment.monthlyByBank || {};
+      
+      // E1: Display normalized value
+      setText('normalizedMonthly', formatRM(normalized));
+      setText('e1_summary', formatRM(normalized));
+      totalExisting += normalized;
+      
+      // Bank breakdown
+      const bankCodes = ['rhb', 'maybank', 'cimb', 'stanchart', 'smebank', 'brakyat'];
+      bankCodes.forEach(code => {
+        const val = byBank[code] || 0;
+        setText('ref_' + code, formatRM(val));
+        // Highlight max value
+        const cell = document.getElementById('ref_' + code)?.parentElement;
+        if (cell) {
+          cell.classList.toggle('max-bank', val === normalized);
+        }
+      });
+      
+      // Hide legacy company table, show normalized
+      const legacySection = document.getElementById('legacyCompanySection');
+      if (legacySection) legacySection.style.display = 'none';
+      
+    } else {
+      // === v5.1 Mode: Legacy Company Facilities ===
+      let companyMonthly = 0;
+      const tbody = document.getElementById('companyFacilitiesBody');
+      tbody.innerHTML = '';
+
+      CONFIG.companyFacilities.forEach((f, idx) => {
+        const annual = f.monthly * 12;
+        companyMonthly += f.monthly;
+        
+        tbody.innerHTML += `
+          <tr>
+            <td>${idx + 1}</td>
+            <td>${f.facility}</td>
+            <td>${f.bank}</td>
+            <td class="text-right">${formatRM(f.limit)}</td>
+            <td class="text-right">${formatRM(f.outstanding)}</td>
+            <td class="text-right">
+              <input type="number" class="input-sm" value="${f.monthly}" 
+                     onchange="updateFacilityMonthly(${idx}, this.value)" style="width: 80px;">
+            </td>
+            <td class="text-right">${formatRM(annual)}</td>
+          </tr>
+        `;
+      });
+
+      if (CONFIG.companyFacilities.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center" style="color: var(--text-muted);">No company facilities recorded</td></tr>';
+      }
+
+      setText('totalCompanyMonthly', formatRM(companyMonthly));
+      setText('totalCompanyAnnual', formatRM(companyMonthly * 12));
+      setText('normalizedMonthly', formatRM(companyMonthly));
+      setText('e1_summary', formatRM(companyMonthly));
+      totalExisting += companyMonthly;
+      
+      // Show legacy section
+      const legacySection = document.getElementById('legacyCompanySection');
+      if (legacySection) legacySection.style.display = 'block';
+    }
+    
+    // E2: Pending Applications
+    let pendingMonthly = 0;
+    const pendingBody = document.getElementById('pendingApplicationsBody');
+    
+    if (CONFIG.pendingApplications && CONFIG.pendingApplications.length > 0) {
+      // Store checkbox states before rebuilding
+      const pendingStates = CONFIG.pendingApplications.map((p, idx) => {
+        const cb = document.getElementById(`pending_${idx}_include`);
+        return cb ? cb.checked : (p.include !== false);
+      });
+      
+      let pendingHtml = '';
+      CONFIG.pendingApplications.forEach((p, idx) => {
+        const isChecked = pendingStates[idx];
+        if (isChecked) pendingMonthly += (p.monthly || 0);
+        
+        pendingHtml += `
+          <tr>
+            <td class="text-center">
+              <input type="checkbox" id="pending_${idx}_include" ${isChecked ? 'checked' : ''}>
+            </td>
+            <td>${idx + 1}</td>
+            <td>${p.facility || ''}</td>
+            <td class="text-right">${formatRM(p.limit || 0)}</td>
+            <td>${p.tenure || '-'}</td>
+            <td class="text-right">${formatRM(p.monthly || 0)}</td>
+            <td>${p.status || '-'}</td>
+          </tr>
+        `;
+      });
+      pendingBody.innerHTML = pendingHtml;
+      
+      // Add event listeners after DOM is built
+      CONFIG.pendingApplications.forEach((p, idx) => {
+        const cb = document.getElementById(`pending_${idx}_include`);
+        if (cb) cb.addEventListener('change', recalculate);
+      });
+    } else {
+      pendingBody.innerHTML = '<tr><td colspan="7" class="text-center" style="color: var(--accent);">✓ No pending applications</td></tr>';
+    }
+    setText('totalPendingMonthly', formatRM(pendingMonthly));
+    setText('e2_summary', formatRM(pendingMonthly));
+    totalExisting += pendingMonthly;
+    
+    // E3: Manual Pending
+    let manualMonthly = 0;
+    if (document.getElementById('manual1_include')?.checked) {
+      manualMonthly += parseFloat(document.getElementById('manual1_monthly')?.value) || 0;
+    }
+    if (document.getElementById('manual2_include')?.checked) {
+      manualMonthly += parseFloat(document.getElementById('manual2_monthly')?.value) || 0;
+    }
+    setText('totalManualMonthly', formatRM(manualMonthly));
+    setText('e3_summary', formatRM(manualMonthly));
+    totalExisting += manualMonthly;
+    
+    // E4: NLCI Company
+    let nlciMonthly = 0;
+    const nlciBody = document.getElementById('nlciCompanyBody');
+    
+    if (CONFIG.nlciCompany && CONFIG.nlciCompany.length > 0) {
+      // Store checkbox states before rebuilding
+      const nlciStates = CONFIG.nlciCompany.map((n, idx) => {
+        const cb = document.getElementById(`nlci_${idx}_include`);
+        return cb ? cb.checked : (n.include !== false);
+      });
+      
+      let nlciHtml = '';
+      CONFIG.nlciCompany.forEach((n, idx) => {
+        const isChecked = nlciStates[idx];
+        if (isChecked) nlciMonthly += (n.monthly || 0);
+        
+        nlciHtml += `
+          <tr>
+            <td class="text-center">
+              <input type="checkbox" id="nlci_${idx}_include" ${isChecked ? 'checked' : ''}>
+            </td>
+            <td>${idx + 1}</td>
+            <td>${n.facility || ''}</td>
+            <td>${n.lender || ''}</td>
+            <td class="text-right">${formatRM(n.outstanding || 0)}</td>
+            <td class="text-right">${formatRM(n.monthly || 0)}</td>
+          </tr>
+        `;
+      });
+      nlciBody.innerHTML = nlciHtml;
+      
+      // Add event listeners after DOM is built
+      CONFIG.nlciCompany.forEach((n, idx) => {
+        const cb = document.getElementById(`nlci_${idx}_include`);
+        if (cb) cb.addEventListener('change', recalculate);
+      });
+    } else {
+      nlciBody.innerHTML = '<tr><td colspan="6" class="text-center" style="color: var(--accent);">✓ No NLCI facilities</td></tr>';
+    }
+    setText('totalNlciMonthly', formatRM(nlciMonthly));
+    setText('e4_summary', formatRM(nlciMonthly));
+    totalExisting += nlciMonthly;
+
+    // Directors' facilities (legacy - hidden in v5.2)
+    const dirBody = document.getElementById('directorsFacilitiesBody');
+    if (dirBody) {
+      dirBody.innerHTML = '';
+      let dirMonthly = 0;
+
+      CONFIG.directorsFacilities.forEach((f, idx) => {
+        const annual = f.monthly * 12;
+        dirMonthly += f.monthly;
+        
+        dirBody.innerHTML += `
+          <tr>
+            <td>${idx + 1}</td>
+            <td>${f.facility}<br><small style="color: var(--text-muted);">${f.director}</small></td>
+            <td>${f.bank}</td>
+            <td class="text-right">${formatRM(f.limit)}</td>
+            <td class="text-right">${formatRM(f.outstanding)}</td>
+            <td class="text-right">${formatRM(f.monthly)}</td>
+            <td class="text-right">${formatRM(annual)}</td>
+          </tr>
+        `;
+      });
+
+      if (CONFIG.directorsFacilities.length === 0) {
+        dirBody.innerHTML = '<tr><td colspan="7" class="text-center" style="color: var(--text-muted);">No directors\' facilities recorded</td></tr>';
+      }
+
+      setText('totalDirectorsMonthly', formatRM(dirMonthly));
+      setText('totalDirectorsAnnual', formatRM(dirMonthly * 12));
+    }
+
+    // Total existing
+    setText('totalExistingMonthly', formatRM(totalExisting));
+    
+    return totalExisting * 12;  // Return annual
+  }
+
+  function updateFacilityMonthly(idx, value) {
+    CONFIG.companyFacilities[idx].monthly = parseFloat(value) || 0;
+    recalculate();
+  }
+
+  // ============================================
+  // NEW COMMITMENT CALCULATION
+  // ============================================
+  function calculateNewCommitment() {
+    let revolvingTotal = 0;
+    let termTotal = 0;
+
+    // ========================================
+    // REVOLVING FACILITIES (OD, Trade, CC, Revolving)
+    // Calculation: Limit x Utilization% x Rate%
+    // ========================================
+    const revolvingFacilities = [
+      { prefix: 'newOd', name: 'Working Capital OD' },
+      { prefix: 'newTrade', name: 'Trade Line' },
+      { prefix: 'newCc', name: 'Credit Card' },
+      { prefix: 'newRev', name: 'Revolving Credit' }
+    ];
+
+    revolvingFacilities.forEach(f => {
+      const limit = getInputValue(`${f.prefix}Limit`);
+      const rate = getInputValue(`${f.prefix}Rate`) / 100;
+      const util = getInputValue(`${f.prefix}Util`) / 100;
+      
+      const annual = limit * util * rate;
+      setText(`${f.prefix}Monthly`, formatRM(annual / 12));
+      setText(`${f.prefix}Annual`, formatRM(annual));
+      revolvingTotal += annual;
+    });
+
+    setText('totalRevolvingMonthly', formatRM(revolvingTotal / 12));
+    setText('totalRevolvingAnnual', formatRM(revolvingTotal));
+
+    // ========================================
+    // TERM FACILITIES (Term Loan, HP, Other)
+    // Method: Reducing Balance OR Flat Rate
+    // ========================================
+    const termFacilities = [
+      { prefix: 'newTl1', name: 'Term Loan 1' },
+      { prefix: 'newTl2', name: 'Term Loan 2' },
+      { prefix: 'newHp1', name: 'Hire Purchase 1' },
+      { prefix: 'newHp2', name: 'Hire Purchase 2' },
+      { prefix: 'newOther1', name: 'Other 1' },
+      { prefix: 'newOther2', name: 'Other 2' }
+    ];
+
+    termFacilities.forEach(f => {
+      const limit = getInputValue(`${f.prefix}Limit`);
+      const tenure = getInputValue(`${f.prefix}Tenure`) || 5;
+      const rate = getInputValue(`${f.prefix}Rate`);
+      const methodEl = document.getElementById(`${f.prefix}Method`);
+      const method = methodEl ? methodEl.value : 'reducing';
+      
+      let annual = 0;
+      
+      if (limit > 0) {
+        if (method === 'flat') {
+          // Flat Rate: Monthly = (Principal + (Principal x Rate% x Tenure)) / (Tenure x 12)
+          const totalInterest = limit * (rate / 100) * tenure;
+          const totalRepayment = limit + totalInterest;
+          const monthly = totalRepayment / (tenure * 12);
+          annual = monthly * 12;
+        } else {
+          // Reducing Balance: Standard amortization
+          annual = calculateAmortization(limit, tenure, rate);
+        }
+      }
+      
+      setText(`${f.prefix}Monthly`, formatRM(annual / 12));
+      setText(`${f.prefix}Annual`, formatRM(annual));
+      termTotal += annual;
+    });
+
+    setText('totalTermMonthly', formatRM(termTotal / 12));
+    setText('totalTermAnnual', formatRM(termTotal));
+
+    // ========================================
+    // GRAND TOTAL
+    // ========================================
+    const grandTotal = revolvingTotal + termTotal;
+    setText('totalNewMonthly', formatRM(grandTotal / 12));
+    setText('totalNewAnnual', formatRM(grandTotal));
+
+    return grandTotal;
+  }
+
+  // ============================================
+  // DSCR ANALYSIS UPDATE
+  // ============================================
+  function updateDscrAnalysis(dscr) {
+    const tbody = document.getElementById('dscrAnalysisBody');
+    tbody.innerHTML = '';
+    
+    let allPass = true;
+
+    CONFIG.banks.forEach(bank => {
+      const p1Status = getDscrStatus(dscr[1]);
+      const passes = dscr[1] >= bank.minDscr;
+      if (!passes) allPass = false;
+
+      tbody.innerHTML += `
+        <tr>
+          <td>${bank.name}</td>
+          <td class="text-center">${bank.minDscr.toFixed(2)}x</td>
+          <td class="text-center"><span class="dscr-cell ${getDscrStatus(dscr[0]).class}">${formatDscr(dscr[0])}</span></td>
+          <td class="text-center"><span class="dscr-cell ${getDscrStatus(dscr[1]).class}">${formatDscr(dscr[1])}</span></td>
+          <td class="text-center"><span class="dscr-cell ${getDscrStatus(dscr[2]).class}">${formatDscr(dscr[2])}</span></td>
+          <td class="text-center"><span class="dscr-cell ${getDscrStatus(dscr[3]).class}">${formatDscr(dscr[3])}</span></td>
+          <td class="text-center"><span class="dscr-badge ${passes ? 'acceptable' : 'fail'}">${passes ? ' PASS' : 'X FAIL'}</span></td>
+        </tr>
+      `;
+    });
+
+    // Update bank grid
+    updateBankGrid(dscr[1]);
+  }
+
+  function updateBankGrid(p1Dscr) {
+    const grid = document.getElementById('bankGrid');
+    grid.innerHTML = '';
+
+    CONFIG.banks.forEach(bank => {
+      const passes = p1Dscr >= bank.minDscr;
+      const buffer = p1Dscr - bank.minDscr;
+
+      grid.innerHTML += `
+        <div class="bank-card ${passes ? 'pass' : 'fail'}">
+          <div class="bank-name">${bank.name}</div>
+          <div class="bank-threshold">Min: ${bank.minDscr.toFixed(2)}x</div>
+          <div class="bank-dscr">${formatDscr(p1Dscr)}</div>
+          <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">
+            Buffer: ${buffer >= 0 ? '+' : ''}${buffer.toFixed(2)}x
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  // ============================================
+  // DASHBOARD UPDATE
+  // ============================================
+  function updateDashboard(projEbitda, totalDs, dscr, baseRevenue, p1Margin) {
+    setText('kpiEbitda', formatRM(projEbitda[1]));
+    setText('kpiDebtService', formatRM(totalDs));
+    setText('kpiDscr', formatDscr(dscr[1]));
+    setText('kpiRevenue', formatRM(baseRevenue));
+    setText('kpiMargin', formatPercent(p1Margin));
+
+    const status = getDscrStatus(dscr[1]);
+    setText('kpiStatus', status.text);
+    
+    const passCount = CONFIG.banks.filter(b => dscr[1] >= b.minDscr).length;
+    setText('kpiStatusDetail', `${passCount}/${CONFIG.banks.length} Banks Pass`);
+
+    const statusBox = document.getElementById('kpiStatusBox');
+    statusBox.className = `kpi kpi-${status.class === 'strong' || status.class === 'acceptable' ? 'positive' : (status.class === 'marginal' ? 'muted' : 'negative')}`;
+
+    // Update gauge
+    updateGauge(dscr[1]);
+  }
+
+  function updateGauge(dscrValue) {
+    const needle = document.getElementById('gaugeNeedle');
+    const valueText = document.getElementById('gaugeValue');
+    const statusEl = document.getElementById('gaugeStatus');
+
+    // Map DSCR to angle (-90 to 90 degrees)
+    let angle;
+    if (dscrValue <= 0) angle = -90;
+    else if (dscrValue <= 1) angle = -90 + (dscrValue * 45);
+    else if (dscrValue <= 1.25) angle = -45 + ((dscrValue - 1) / 0.25 * 45);
+    else if (dscrValue <= 1.5) angle = (dscrValue - 1.25) / 0.25 * 45;
+    else if (dscrValue <= 2) angle = 45 + ((dscrValue - 1.5) / 0.5 * 45);
+    else angle = 90;
+
+    needle.setAttribute('transform', `rotate(${angle} 100 100)`);
+    valueText.textContent = formatDscr(dscrValue);
+
+    const status = getDscrStatus(dscrValue);
+    statusEl.className = `gauge-status ${status.class}`;
+    statusEl.textContent = status.text;
+  }
+
+  // ============================================
+  // TREND CHART UPDATE
+  // ============================================
+  function updateTrendChart(projEbitda) {
+    const hasFy3 = CONFIG.baseYear.fy3 && CONFIG.baseYear.fy3.revenue > 0;
+    const fy3Ebitda = hasFy3 ? CONFIG.baseYear.fy3.ebitda : 0;
+
+    const maxEbitda = Math.max(
+      CONFIG.baseYear.fy1.ebitda,
+      CONFIG.baseYear.fy2.ebitda,
+      fy3Ebitda,
+      projEbitda[1]
+    );
+
+    const fy1Pct = maxEbitda > 0 ? (CONFIG.baseYear.fy1.ebitda / maxEbitda * 100) : 0;
+    const fy2Pct = maxEbitda > 0 ? (CONFIG.baseYear.fy2.ebitda / maxEbitda * 100) : 0;
+    const fy3Pct = maxEbitda > 0 ? (fy3Ebitda / maxEbitda * 100) : 0;
+    const p1Pct = maxEbitda > 0 ? (projEbitda[1] / maxEbitda * 100) : 0;
+
+    document.getElementById('trendFy1').style.width = `${fy1Pct}%`;
+    document.getElementById('trendFy2').style.width = `${fy2Pct}%`;
+    document.getElementById('trendP1').style.width = `${p1Pct}%`;
+
+    setText('trendFy1Val', formatRM(CONFIG.baseYear.fy1.ebitda));
+    setText('trendFy2Val', formatRM(CONFIG.baseYear.fy2.ebitda));
+    setText('trendP1Val', formatRM(projEbitda[1]));
+
+    // FY3 trend bar
+    const fy3Row = document.getElementById('trendFy3Row');
+    if (hasFy3) {
+      if (fy3Row) fy3Row.style.display = '';
+      document.getElementById('trendFy3').style.width = `${fy3Pct}%`;
+      setText('trendFy3Val', formatRM(fy3Ebitda));
+    } else {
+      if (fy3Row) fy3Row.style.display = 'none';
+    }
+  }
+
+  // ============================================
+  // SENSITIVITY ANALYSIS
+  // ============================================
+  function updateSensitivity(baseRevenue, currentSg, currentEm, totalDs) {
+    const grid = document.getElementById('sensitivityGrid');
+    grid.innerHTML = '';
+
+    CONFIG.sensitivity.forEach((scenario, idx) => {
+      const sg = scenario.sg === 'current' ? currentSg : scenario.sg;
+      const em = scenario.em === 'current' ? currentEm : scenario.em;
+      
+      const projSales = baseRevenue * (1 + sg / 100);
+      const ebitda = projSales * em / 100;
+      const dscr = totalDs > 0 ? ebitda / totalDs : 0;
+      const status = getDscrStatus(dscr);
+
+      grid.innerHTML += `
+        <div class="sensitivity-card ${scenario.sg === 'current' ? 'active' : ''}">
+          <div class="sensitivity-title">${scenario.name}</div>
+          <div class="sensitivity-value" style="color: ${status.color};">${formatDscr(dscr)}</div>
+          <div class="sensitivity-detail">SG: ${sg}% | EM: ${em}%</div>
+          <div style="margin-top: 8px;">
+            <span class="dscr-badge ${status.class}" style="font-size: 9px;">${status.text}</span>
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  // ============================================
+  // BREAKEVEN & DEBT CAPACITY
+  // ============================================
+  function updateBreakeven(p1Ebitda, totalDs, p1Sales, existingDs) {
+    const minEbitda125 = totalDs * 1.25;
+    const minMargin = p1Sales > 0 ? (minEbitda125 / p1Sales * 100) : 0;
+    const maxDs = p1Ebitda / 1.25;
+
+    setText('beMinEbitda', formatRM(minEbitda125));
+    setText('beMinMargin', formatPercent(minMargin));
+    setText('beMaxDs', formatRM(maxDs));
+
+    // Debt Capacity
+    const available = maxDs - existingDs;
+    const odLimit = available / 0.09;
+    const tlLimit = available / 0.25; // Rough estimate for 5yr TL @ 9%
+
+    setText('dcEbitda', formatRM(p1Ebitda));
+    setText('dcMaxDs', formatRM(maxDs));
+    setText('dcExisting', formatRM(existingDs));
+    setText('dcAvailable', formatRM(Math.max(0, available)));
+    setText('dcOdLimit', formatRM(Math.max(0, odLimit)));
+    setText('dcTlLimit', formatRM(Math.max(0, tlLimit)));
+  }
+
+  // ============================================
+  // SCENARIO COMPARISON
+  // ============================================
+  function updateScenarioComparison(p1Ebitda, existingDs, newDs) {
+    // Scenario A: Current (Existing Only)
+    const dscrA = existingDs > 0 ? p1Ebitda / existingDs : 0;
+    const statusA = getDscrStatus(dscrA);
+
+    setText('scaDs', formatRM(existingDs));
+    setText('scaDscr', formatDscr(dscrA));
+    setHTML('scaStatus', `<span class="dscr-badge ${statusA.class}">${statusA.text}</span>`);
+
+    // Scenario B: With New Facility
+    const totalDs = existingDs + newDs;
+    const dscrB = totalDs > 0 ? p1Ebitda / totalDs : 0;
+    const statusB = getDscrStatus(dscrB);
+
+    // Calculate total new facility limits (all revolving + term facilities)
+    const newFacilityTotal = 
+      getInputValue('newOdLimit') + 
+      getInputValue('newTradeLimit') +
+      getInputValue('newCcLimit') +
+      getInputValue('newRevLimit') +
+      getInputValue('newTl1Limit') + 
+      getInputValue('newTl2Limit') +
+      getInputValue('newHp1Limit') + 
+      getInputValue('newHp2Limit') +
+      getInputValue('newOther1Limit') + 
+      getInputValue('newOther2Limit');
+
+    setText('scbNewFacility', formatRM(newFacilityTotal));
+    setText('scbDs', formatRM(totalDs));
+    setText('scbDscr', formatDscr(dscrB));
+    setHTML('scbStatus', `<span class="dscr-badge ${statusB.class}">${statusB.text}</span>`);
+  }
+
+  // ============================================
+  // PRESET SCENARIOS
+  // ============================================
+  function applyPreset(preset) {
+    const p = CONFIG.presets[preset];
+    if (!p) return;
+
+    // Update buttons - only if called from a button click
+    document.querySelectorAll('.btn-preset').forEach(btn => btn.classList.remove('active'));
+    
+    // Try to highlight the clicked button, or find by preset name
+    try {
+      if (event && event.target) {
+        const btn = event.target.closest('.btn-preset');
+        if (btn) btn.classList.add('active');
+      }
+    } catch (e) {
+      // Called programmatically, find button by preset name
+      const btns = document.querySelectorAll('.btn-preset');
+      btns.forEach(btn => {
+        if (btn.textContent.toLowerCase().includes(preset)) {
+          btn.classList.add('active');
+        }
+      });
+    }
+
+    // Apply values
+    ['sg', 'em', 'cos', 'opex', 'deb', 'stk', 'cred'].forEach(key => {
+      for (let i = 0; i < 3; i++) {
+        setInputValue(`${key}_p${i + 1}`, p[key][i]);
+      }
+    });
+
+    recalculate();
+  }
+
+  function resetInputs() {
+    applyPreset('base');
+    
+    // Reset revolving facilities (limits, rates, utilizations)
+    const revolvingDefaults = [
+      { prefix: 'newOd', rate: 8.5, util: 100 },
+      { prefix: 'newTrade', rate: 8.0, util: 100 },
+      { prefix: 'newCc', rate: 18.0, util: 100 },
+      { prefix: 'newRev', rate: 8.5, util: 100 }
+    ];
+    
+    revolvingDefaults.forEach(f => {
+      setInputValue(`${f.prefix}Limit`, 0);
+      setInputValue(`${f.prefix}Rate`, f.rate);
+      setInputValue(`${f.prefix}Util`, f.util);
+    });
+
+    // Reset term facilities (limits, tenures, rates, methods)
+    const termDefaults = [
+      { prefix: 'newTl1', tenure: 5, rate: 8.0, method: 'reducing' },
+      { prefix: 'newTl2', tenure: 5, rate: 8.0, method: 'reducing' },
+      { prefix: 'newHp1', tenure: 7, rate: 4.5, method: 'flat' },
+      { prefix: 'newHp2', tenure: 7, rate: 4.5, method: 'flat' },
+      { prefix: 'newOther1', tenure: 5, rate: 8.0, method: 'reducing' },
+      { prefix: 'newOther2', tenure: 5, rate: 8.0, method: 'reducing' }
+    ];
+    
+    termDefaults.forEach(f => {
+      setInputValue(`${f.prefix}Limit`, 0);
+      setInputValue(`${f.prefix}Tenure`, f.tenure);
+      setInputValue(`${f.prefix}Rate`, f.rate);
+      const methodEl = document.getElementById(`${f.prefix}Method`);
+      if (methodEl) methodEl.value = f.method;
+    });
+
+    recalculate();
+  }
+
+  // ============================================
+  // ANNUALIZATION TOGGLE
+  // ============================================
+  // Base year selection is handled by the dropdown onchange -> recalculate()
+
+  // ============================================
+  // EXPORT FUNCTIONS
+  // ============================================
+  function downloadHTML() {
+    // STEP 1: Update the saved-data JSON with current state
+    const currentState = collectCurrentState();
+    updateSavedData(currentState);
+    
+    // STEP 2: Save input values to HTML attributes (backup)
+    document.querySelectorAll('input[type="number"], input[type="text"]').forEach(input => {
+      input.setAttribute('value', input.value);
+    });
+    
+    // Save checkbox states
+    document.querySelectorAll('input[type="checkbox"]').forEach(input => {
+      if (input.checked) {
+        input.setAttribute('checked', 'checked');
+      } else {
+        input.removeAttribute('checked');
+      }
+    });
+    
+    // Save select dropdown states
+    document.querySelectorAll('select').forEach(select => {
+      select.querySelectorAll('option').forEach(opt => {
+        opt.removeAttribute('selected');
+      });
+      const selectedOption = select.querySelector(`option[value="${select.value}"]`);
+      if (selectedOption) {
+        selectedOption.setAttribute('selected', 'selected');
+      }
+    });
+
+    // STEP 3: Get the complete HTML (now includes updated saved-data)
+    const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+    
+    // STEP 4: Create and download file
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    const timestamp = new Date().toISOString().slice(0,10);
+    a.download = `DSCR_Calculator_[COMPANY_SHORT]_${timestamp}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    console.log('File saved with state:', currentState);
+  }
+
+  function exportPDF() {
+    alert('PDF export requires jsPDF + html2canvas libraries. Add them to enable this feature.\n\nAlternatively, use browser Print (Ctrl+P) and select "Save as PDF".');
+  }
+
+  function copySummary() {
+    const p1Ebitda = document.getElementById('kpiEbitda').textContent;
+    const totalDs = document.getElementById('kpiDebtService').textContent;
+    const p1Dscr = document.getElementById('kpiDscr').textContent;
+    const status = document.getElementById('kpiStatus').textContent;
+
+    const summary = `
+DSCR ANALYSIS SUMMARY
+=====================
+Company: ${CONFIG.companyName}
+Reg No: ${CONFIG.regNo}
+Date: ${new Date().toLocaleDateString()}
+
+P1 Projected EBITDA: ${p1Ebitda}
+Total Debt Service: ${totalDs}
+P1 DSCR: ${p1Dscr}
+Status: ${status}
+
+Formula: DSCR = EBITDA / Total Debt Service
+(Directors' facilities excluded per banking guidelines)
+
+Prepared by: Kredit Lab
+    `.trim();
+
+    navigator.clipboard.writeText(summary).then(() => {
+      alert('Summary copied to clipboard!');
+    });
+  }
+
+  // ============================================
+  // INITIALIZATION
+  // ============================================
+  function init() {
+    // Set generated date
+    setText('generatedDate', new Date().toLocaleDateString('en-MY', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    }));
+
+    // CRITICAL: Restore from saved data first
+    const savedData = getSavedData();
+    if (savedData && savedData.savedDate) {
+      console.log('Restoring from saved data:', savedData.savedDate);
+      restoreFromSavedData(savedData);
+    }
+
+    // Initial calculation
+    
+    // === POPULATE SECTION A: BASE YEAR FINANCIALS ===
+    const fy1 = CONFIG.baseYear.fy1;
+    const fy2 = CONFIG.baseYear.fy2;
+    const fy3 = CONFIG.baseYear.fy3;
+
+    // Update year column headers and trend labels from CONFIG period fields
+    const fy1Label = fy1.period || 'FY1';
+    const fy2Label = fy2.period || 'FY2';
+    const fy3Label = (fy3 && fy3.period) || 'FY3';
+    setText('thFy1Header', fy1Label);
+    setText('thFy2Header', fy2Label);
+    setText('trendLabelFy1', fy1Label);
+    setText('trendLabelFy2', fy2Label);
+
+    // FY3 column: hide if no data, show if data exists
+    const hasFy3 = fy3 && fy3.revenue > 0;
+    if (hasFy3) {
+      setText('thFy3Header', fy3Label);
+      setText('trendLabelFy3', fy3Label);
+      // Default base year to FY3 (latest)
+      setText('baseYearLabel', fy3Label);
+      setText('qaBaseSource', fy3Label);
+      // Update dropdown options with actual labels
+      const sel = document.getElementById('baseYearSelect');
+      if (sel) {
+        sel.options[0].text = fy3Label + ' (Latest Audited)';
+        sel.options[1].text = fy2Label;
+      }
+    } else {
+      // Hide fy3 column and set base year to fy2
+      document.getElementById('tableA').classList.add('fy3-hidden');
+      const fy3Row = document.getElementById('trendFy3Row');
+      if (fy3Row) fy3Row.style.display = 'none';
+      setText('baseYearLabel', fy2Label);
+      setText('qaBaseSource', fy2Label);
+      // Update dropdown: remove fy3 option, default to fy2
+      const sel = document.getElementById('baseYearSelect');
+      if (sel) {
+        sel.options[0].style.display = 'none';
+        sel.value = 'fy2';
+        sel.options[1].text = fy2Label + ' (Latest Audited)';
+      }
+    }
+
+    // Helper to populate a FY column
+    function populateFyColumn(prefix, data) {
+      setText(prefix + 'Revenue', formatRM(data.revenue));
+      setText(prefix + 'Cos', formatRM(data.cos));
+      setText(prefix + 'CosP', formatPercent(data.revenue > 0 ? data.cos / data.revenue * 100 : 0));
+      setText(prefix + 'Gp', formatRM(data.gp));
+      setText(prefix + 'GpP', formatPercent(data.revenue > 0 ? data.gp / data.revenue * 100 : 0));
+      setText(prefix + 'Opex', formatRM(data.opex));
+      setText(prefix + 'OpexP', formatPercent(data.revenue > 0 ? data.opex / data.revenue * 100 : 0));
+      setText(prefix + 'Ebitda', formatRM(data.ebitda));
+      setText(prefix + 'EbitdaP', formatPercent(data.revenue > 0 ? data.ebitda / data.revenue * 100 : 0));
+      setText(prefix + 'Dep', formatRM(data.depreciation));
+      setText(prefix + 'Fin', formatRM(data.finCosts));
+      setText(prefix + 'Pbt', formatRM(data.pbt));
+      setText(prefix + 'Tax', formatRM(data.tax));
+      setText(prefix + 'Np', formatRM(data.netProfit));
+    }
+
+    populateFyColumn('fy1', fy1);
+    populateFyColumn('fy2', fy2);
+    if (hasFy3) {
+      populateFyColumn('fy3', fy3);
+    }
+
+    recalculate();
+  }
+
+  // Run on load
+  document.addEventListener('DOMContentLoaded', init);
+
+  // ============================================
+  // THEME TOGGLE FUNCTIONALITY
+  // ============================================
+  function toggleTheme() {
+    const html = document.documentElement;
+    const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', newTheme);
+    localStorage.setItem('dscr-calculator-theme', newTheme);
+    updateToggleButton(newTheme);
+  }
+
+  function updateToggleButton(theme) {
+    const btn = document.getElementById('theme-toggle-btn');
+    if (btn) {
+      btn.innerHTML = theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+    }
+  }
+
+  function initTheme() {
+    const saved = localStorage.getItem('dscr-calculator-theme');
+    if (saved) {
+      document.documentElement.setAttribute('data-theme', saved);
+      updateToggleButton(saved);
+    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      updateToggleButton('dark');
+    }
+  }
+
+  // Initialize theme on load
+  document.addEventListener('DOMContentLoaded', initTheme);
+
+  </script>
+
+</body>
+</html>
