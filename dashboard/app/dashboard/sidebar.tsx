@@ -64,7 +64,7 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="flex h-screen w-64 flex-col border-r border-slate-800 bg-[#021a2d] text-white">
+    <aside className="flex h-dvh w-64 shrink-0 flex-col border-r border-slate-800 bg-[#021a2d] text-white">
       {/* Top */}
       <div className="flex items-center justify-start border-b border-slate-800 px-5 py-6">
         <img
