@@ -71,6 +71,9 @@ PRICING: dict[str, dict[str, float]] = {
     "claude-opus-4-7":   {"in": 5.00,  "out": 25.00, "cache_write_5m": 6.25, "cache_read": 0.50},
     "claude-sonnet-4-6": {"in": 3.00,  "out": 15.00, "cache_write_5m": 3.75, "cache_read": 0.30},
     "claude-haiku-4-5":  {"in": 1.00,  "out":  5.00, "cache_write_5m": 1.25, "cache_read": 0.10},
+    "claude-haiku-4-5-20251001": {
+        "in": 1.00, "out": 5.00, "cache_write_5m": 1.25, "cache_read": 0.10
+    },
 }
 
 # `opus` always points at the current top-tier. Explicit version aliases let
@@ -81,7 +84,8 @@ MODEL_ALIASES = {
     "opus-4-8": "claude-opus-4-8",
     "opus-4-7": "claude-opus-4-7",
     "sonnet":   "claude-sonnet-4-6",
-    "haiku":    "claude-haiku-4-5",
+    "haiku":    "claude-haiku-4-5-20251001",
+    "haiku-4-5": "claude-haiku-4-5-20251001",
 }
 
 # Final output gate — appended LAST so it is the freshest instruction in the

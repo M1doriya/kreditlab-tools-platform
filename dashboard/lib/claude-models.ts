@@ -43,34 +43,6 @@ export const CLAUDE_MODEL_PRICING = [
     defaultOutputTokens: 64000,
     defaultEffort: "high",
   },
-  {
-    id: "claude-opus-4-1-20250805",
-    label: "Claude Opus 4.1 (legacy)",
-    inputUsdPerMillionTokens: 15,
-    outputUsdPerMillionTokens: 75,
-    maxOutputTokens: 20000,
-  },
-  {
-    id: "claude-opus-4-20250514",
-    label: "Claude Opus 4 (legacy)",
-    inputUsdPerMillionTokens: 15,
-    outputUsdPerMillionTokens: 75,
-    maxOutputTokens: 20000,
-  },
-  {
-    id: "claude-sonnet-4-20250514",
-    label: "Claude Sonnet 4 (legacy)",
-    inputUsdPerMillionTokens: 3,
-    outputUsdPerMillionTokens: 15,
-    maxOutputTokens: 20000,
-  },
-  {
-    id: "claude-3-5-haiku-20241022",
-    label: "Claude 3.5 Haiku (legacy)",
-    inputUsdPerMillionTokens: 0.8,
-    outputUsdPerMillionTokens: 4,
-    maxOutputTokens: 8192,
-  },
 ] as const;
 
 export type ClaudeModelId = (typeof CLAUDE_MODEL_PRICING)[number]["id"];

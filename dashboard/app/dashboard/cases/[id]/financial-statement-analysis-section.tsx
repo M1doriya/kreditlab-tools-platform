@@ -176,6 +176,22 @@ const getErrorDetailMessage = (detail: unknown): string => {
 
   if (typeof detail.message === "string") return detail.message;
 
+  const stdoutTail = detail.stdoutTail;
+  if (typeof stdoutTail === "string" && stdoutTail.trim()) {
+    return stdoutTail.trim().split(/\r?\n/).slice(-3).join("; ");
+  }
+
+  const stderrTail = detail.stderrTail;
+  if (typeof stderrTail === "string" && stderrTail.trim()) {
+    return stderrTail.trim().split(/\r?\n/).slice(-3).join("; ");
+  }
+
+  const body = detail.body;
+  if (body !== detail) {
+    const bodyMessage = getErrorDetailMessage(body);
+    if (bodyMessage) return bodyMessage;
+  }
+
   const nestedDetail = detail.detail;
   if (nestedDetail !== detail) {
     return getErrorDetailMessage(nestedDetail);
@@ -660,7 +676,11 @@ export function FinancialStatementAnalysisSection({
             const result = (await response
               .json()
               .catch(() => ({}))) as RunFinancialAnalysisResponse;
-            runError = getErrorMessage(result, "Claude analysis failed");
+            const statusFallback = `Claude analysis failed (HTTP ${response.status}${
+              response.statusText ? ` ${response.statusText}` : ""
+            })`;
+
+            runError = getErrorMessage(result, statusFallback);
           }
         })
         .catch(() => {

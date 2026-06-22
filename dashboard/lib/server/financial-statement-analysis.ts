@@ -1225,16 +1225,11 @@ function runAnalyzePyCandidate(
         parsed = JSON.parse(readFileSync(outPath, "utf8"));
       } catch (error) {
         reject(
-          new FinancialAnalysisError(
-            "claude_analysis_failure",
-            "Financial statement analysis engine (analyze.py) did not produce valid JSON",
-            502,
-            {
-              code,
-              stdoutTail: stdout.slice(-2000),
-              stderrTail: stderr.slice(-2000),
-              readError: error instanceof Error ? error.message : String(error),
-            }
+          createAnalyzePyFailureError(
+            code,
+            stdout,
+            stderr,
+            error instanceof Error ? error.message : String(error)
           )
         );
         return;
@@ -1255,6 +1250,124 @@ function runAnalyzePyCandidate(
       resolve(parsed as JsonRecord);
     });
   });
+}
+
+function createAnalyzePyFailureError(
+  exitCode: number | null,
+  stdout: string,
+  stderr: string,
+  readError: string
+) {
+  const message =
+    getAnalyzePyFailureMessage(stdout, stderr) ||
+    "Financial statement analysis engine (analyze.py) did not produce valid JSON";
+  const code = getAnalyzePyFailureCode(message);
+
+  return new FinancialAnalysisError(
+    code,
+    message,
+    getAnalyzePyFailureHttpStatus(code),
+    {
+      exitCode,
+      message,
+      stdoutTail: stdout.slice(-2000),
+      stderrTail: stderr.slice(-2000),
+      readError,
+    }
+  );
+}
+
+function getAnalyzePyFailureMessage(stdout: string, stderr: string) {
+  const lines = `${stderr}\n${stdout}`
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line && !/^\.+$/.test(line));
+  const priorityLine = lines.find((line) => {
+    const normalized = line.toLowerCase();
+
+    return (
+      normalized.startsWith("[fatal]") ||
+      normalized.startsWith("[!]") ||
+      normalized.includes("error code:") ||
+      normalized.includes("authentication_error") ||
+      normalized.includes("rate_limit_error") ||
+      normalized.includes("invalid_request_error") ||
+      normalized.includes("not_found_error")
+    );
+  });
+  const message = priorityLine || lines.slice(-3).join(" | ");
+
+  return message.replace(/^\[fatal\]\s*/i, "").slice(0, 1000);
+}
+
+function getAnalyzePyFailureCode(
+  message: string
+): FinancialAnalysisErrorCode {
+  const normalized = message.toLowerCase();
+
+  if (normalized.includes("unknown model")) return "invalid_claude_model";
+  if (
+    normalized.includes("authentication_error") ||
+    normalized.includes("x-api-key") ||
+    normalized.includes("api key") ||
+    normalized.includes("error code: 401") ||
+    normalized.includes("error code: 403")
+  ) {
+    return "claude_auth_failure";
+  }
+  if (
+    normalized.includes("not_found_error") ||
+    normalized.includes("model was not found") ||
+    normalized.includes("error code: 404")
+  ) {
+    return "claude_model_not_found";
+  }
+  if (
+    normalized.includes("rate_limit_error") ||
+    normalized.includes("rate limit") ||
+    normalized.includes("error code: 429")
+  ) {
+    return "claude_rate_limit";
+  }
+  if (
+    normalized.includes("context") ||
+    normalized.includes("too long") ||
+    normalized.includes("maximum") ||
+    normalized.includes("error code: 413")
+  ) {
+    return "claude_context_too_large";
+  }
+  if (
+    normalized.includes("max_tokens") ||
+    normalized.includes("truncated")
+  ) {
+    return "claude_output_truncated";
+  }
+  if (
+    normalized.includes("invalid_request_error") ||
+    normalized.includes("error code: 400")
+  ) {
+    return "invalid_claude_request";
+  }
+
+  return "claude_analysis_failure";
+}
+
+function getAnalyzePyFailureHttpStatus(code: FinancialAnalysisErrorCode) {
+  switch (code) {
+    case "invalid_claude_model":
+    case "invalid_claude_request":
+      return 400;
+    case "claude_rate_limit":
+      return 429;
+    case "claude_context_too_large":
+      return 413;
+    case "claude_auth_failure":
+    case "claude_model_not_found":
+    case "claude_output_truncated":
+    default:
+      return 502;
+  }
 }
 
 export type FinancialAnalysisCostEstimate = {
