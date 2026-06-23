@@ -7,12 +7,13 @@ Tensorlake API. Configure:
 
 ```bash
 OCR_SERVICE_URL=https://your-ocr-service.example.com
-OCR_SERVICE_API_KEY=...
+SERVICE_API_KEY=...
 OCR_SERVICE_TIMEOUT_MS=240000
 ```
 
 The OCR service owns the Azure and optional LLM Whisperer secrets. The dashboard
-only needs the service URL and bearer key.
+only needs the service URL and bearer key. `SERVICE_API_KEY` must match the OCR
+service `SERVICE_API_KEY`.
 
 ## Getting Started
 

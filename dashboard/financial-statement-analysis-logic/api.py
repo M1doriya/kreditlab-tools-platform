@@ -864,7 +864,7 @@ def ocr_service_url() -> str:
 
 
 def ocr_service_api_key() -> str:
-    return os.getenv("OCR_SERVICE_API_KEY") or os.getenv("SERVICE_API_KEY") or ""
+    return os.getenv("SERVICE_API_KEY") or ""
 
 
 def ocr_service_timeout_seconds() -> int | float:

@@ -176,9 +176,7 @@ export async function POST(req: Request) {
         hasOcrServiceUrl: Boolean(
           process.env.OCR_SERVICE_URL || process.env.FINANCIAL_OCR_SERVICE_URL
         ),
-        hasOcrServiceApiKey: Boolean(
-          process.env.OCR_SERVICE_API_KEY || process.env.SERVICE_API_KEY
-        ),
+        hasServiceApiKey: Boolean(process.env.SERVICE_API_KEY),
       })
     );
 

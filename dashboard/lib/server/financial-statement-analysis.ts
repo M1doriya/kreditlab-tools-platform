@@ -3614,7 +3614,7 @@ function getOcrServiceUrl() {
 }
 
 function getOcrServiceApiKey() {
-  return process.env.OCR_SERVICE_API_KEY || process.env.SERVICE_API_KEY || "";
+  return process.env.SERVICE_API_KEY || "";
 }
 
 function getStringFromRecord(value: unknown, key: string) {
