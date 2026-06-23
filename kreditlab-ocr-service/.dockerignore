@@ -1,0 +1,10 @@
+.venv
+.git
+.env
+parity-out
+parity_test.py
+tests
+docs
+examples
+**/__pycache__
+*.pyc

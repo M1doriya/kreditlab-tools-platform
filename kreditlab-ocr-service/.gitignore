@@ -1,0 +1,77 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Test / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.cache
+
+# Type checkers / linters
+.mypy_cache/
+.ruff_cache/
+.pyre/
+
+# Editor / OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Claude Code per-project settings
+.claude/
+
+# Local secrets — never commit
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Build artifacts
+*.log
+*.pid
+
+# Local example output (parse_pdf.py --out default)
+debug/
+
+# Local model weights / downloads
+model/
+models/
+.tensorlake/
+
+# Kredit Lab additions
+parity-out/
+.env

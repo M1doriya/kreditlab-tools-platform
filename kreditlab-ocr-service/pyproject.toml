@@ -1,0 +1,115 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tensorlake-docai"
+version = "0.1.0"
+description = "Open Ingest: open-source document ingestion pipeline — OCR, layout, VLM enrichment, and structured extraction. Runs as a Tensorlake workflow."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Tensorlake", email = "hello@tensorlake.ai" }]
+keywords = ["openingest", "ocr", "vlm", "pdf", "tensorlake", "structured-extraction"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "tensorlake",
+    "huggingface-hub",
+    # LLM / VLM providers
+    "openai==2.3.0",
+    "anthropic==0.74.1",
+    "google-genai==1.51.0",
+    # AWS / HTTP
+    "requests",
+    "boto3",
+    "s3fs",
+    # Image and PDF
+    "pillow",
+    "numpy",
+    "pandas",
+    "pypdf",
+    "pymupdf",
+    "psutil",
+    "img2pdf==0.6.3",
+    # OCR providers
+    "jdeskew==0.3.0",
+    "amazon-textract-textractor",
+    "azure-ai-documentintelligence",
+    # Validation / parsing
+    "pydantic",
+    "tiktoken==0.11.0",
+    "beautifulsoup4==4.13.4",
+    "lxml==6.1.0",
+    # File handling
+    "python-magic==0.4.27",
+    "openpyxl",
+    "xlrd",
+    # Utilities
+    "markdownify",
+    "cryptography==46.0.7",
+    # Pins to resolve transitive conflicts
+    "protobuf>=6.33.5,<7.0",
+    "pytest>=9.0.3",
+    "chardet>=7.4.3",
+    "python-docx>=1.2.0",
+    "pdf2image>=1.17.0",
+    "pytest-cov>=7.1.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-mock", "ruff", "black"]
+cpu = ["torch", "transformers"]
+gpu = ["torch", "transformers"]
+
+[project.urls]
+Homepage = "https://github.com/tensorlakeai/openingest"
+Issues = "https://github.com/tensorlakeai/openingest/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["tensorlake_docai*"]
+
+[tool.setuptools.package-data]
+tensorlake_docai = ["py.typed"]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    # PyMuPDF (fitz) uses SWIG C bindings that emit these on import in Python 3.12+
+    "ignore:builtin type SwigPy:DeprecationWarning",
+    "ignore:builtin type swigvarlink:DeprecationWarning",
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.uv.extra-build-variables.cryptography]
+PYO3_USE_ABI3_FORWARD_COMPATIBILITY = "1"
+
+[tool.uv]
+conflicts = [
+    [{ extra = "cpu" }, { extra = "gpu" }],
+]
+
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cu124", extra = "gpu" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cu124"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true
