@@ -23,7 +23,7 @@ export async function POST(req: Request) {
       JSON.stringify({
         route: "/api/convert-financial-pdf",
         method: req.method,
-        stage: "tensorlake_conversion",
+        stage: "ocr_conversion",
       })
     );
 
@@ -165,7 +165,7 @@ export async function POST(req: Request) {
 
     console.info(
       JSON.stringify({
-        stage: "tensorlake_conversion",
+        stage: "ocr_conversion",
         fileCount: documents.length,
         files: documents.map((document) => ({
           fileName: document.fileName,
@@ -173,7 +173,12 @@ export async function POST(req: Request) {
           fileSize:
             typeof document.file.size === "number" ? document.file.size : undefined,
         })),
-        hasTensorlakeApiKey: Boolean(process.env.TENSORLAKE_API_KEY),
+        hasOcrServiceUrl: Boolean(
+          process.env.OCR_SERVICE_URL || process.env.FINANCIAL_OCR_SERVICE_URL
+        ),
+        hasOcrServiceApiKey: Boolean(
+          process.env.OCR_SERVICE_API_KEY || process.env.SERVICE_API_KEY
+        ),
       })
     );
 
@@ -184,7 +189,7 @@ export async function POST(req: Request) {
     if (error instanceof FinancialAnalysisError) {
       console.error(
         JSON.stringify({
-          stage: "tensorlake_conversion",
+          stage: "ocr_conversion",
           code: error.code,
           message: error.message,
           detail: error.detail,
@@ -204,7 +209,7 @@ export async function POST(req: Request) {
 
     console.error(
       JSON.stringify({
-        stage: "tensorlake_conversion",
+        stage: "ocr_conversion",
         message: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
       })
@@ -212,8 +217,8 @@ export async function POST(req: Request) {
 
     return Response.json(
       {
-        error: "Failed to convert PDF with Tensorlake",
-        code: "tensorlake_extraction_failure",
+        error: "Failed to convert PDF with OCR service",
+        code: "ocr_extraction_failure",
         detail: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }

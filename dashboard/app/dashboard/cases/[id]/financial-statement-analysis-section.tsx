@@ -48,8 +48,9 @@ type GeneratedTextFile = {
   fileType: "text/plain";
   text: string;
   textLength: number;
-  tensorlakeParseId?: string;
-  tensorlakePagesParsed?: number;
+  ocrProvider?: string;
+  ocrPagesParsed?: number;
+  servedBy?: string;
 };
 
 type LocalTextFile = {
@@ -259,7 +260,7 @@ export function FinancialStatementAnalysisSection({
   const [runningAnalysis, setRunningAnalysis] = useState(false);
   const [conversionStatus, setConversionStatus] = useState("");
   const [analysisStatus, setAnalysisStatus] = useState("");
-  const [tensorlakeError, setTensorlakeError] = useState("");
+  const [ocrError, setOcrError] = useState("");
   const [claudeError, setClaudeError] = useState("");
   const [analysisHtml, setAnalysisHtml] = useState("");
   const [analysisReport, setAnalysisReport] = useState<unknown>(null);
@@ -473,9 +474,9 @@ export function FinancialStatementAnalysisSection({
     const pdfs = files.filter((file) => isPdfFile(file.name, file.type));
 
     if (pdfs.length !== files.length) {
-      setTensorlakeError("Step 1 only accepts PDF files.");
+      setOcrError("Step 1 only accepts PDF files.");
     } else {
-      setTensorlakeError("");
+      setOcrError("");
     }
 
     setUploadedPdfs((current) => [...current, ...pdfs]);
@@ -513,15 +514,15 @@ export function FinancialStatementAnalysisSection({
     event.target.value = "";
   };
 
-  const handleConvertWithTensorlake = async () => {
+  const handleConvertWithOcr = async () => {
     if (uploadedPdfs.length === 0 && selectedPdfDocumentIds.length === 0) {
-      setTensorlakeError("Upload or select at least one PDF file.");
+      setOcrError("Upload or select at least one PDF file.");
       return;
     }
 
     setConverting(true);
-    setTensorlakeError("");
-    setConversionStatus("Converting PDF to TXT with Tensorlake...");
+    setOcrError("");
+    setConversionStatus("Converting PDF to TXT with Azure OCR...");
     setAnalysisHtml("");
     setAnalysisReport(null);
     setExportError("");
@@ -540,19 +541,19 @@ export function FinancialStatementAnalysisSection({
         body: formData,
       });
       const result = (await response.json().catch(() => ({
-        error: "Tensorlake conversion returned an unreadable response.",
+        error: "OCR conversion returned an unreadable response.",
       }))) as ConvertFinancialPdfResponse;
 
       if (!response.ok) {
         throw new Error(
-          getErrorMessage(result, "Tensorlake conversion failed")
+          getErrorMessage(result, "OCR conversion failed")
         );
       }
 
       const newTextFiles = result.generatedTextFiles || [];
 
       if (newTextFiles.length === 0) {
-        throw new Error("Tensorlake conversion completed without TXT output.");
+        throw new Error("OCR conversion completed without TXT output.");
       }
 
       setGeneratedTextFiles((current) => [...current, ...newTextFiles]);
@@ -567,7 +568,7 @@ export function FinancialStatementAnalysisSection({
       );
     } catch (conversionError) {
       setConversionStatus("");
-      setTensorlakeError(
+      setOcrError(
         conversionError instanceof Error
           ? conversionError.message
           : String(conversionError)
@@ -902,7 +903,7 @@ export function FinancialStatementAnalysisSection({
               Step 1: Convert PDF to TXT
             </h3>
             <p className="mt-1 text-sm text-slate-600">
-              Tensorlake runs here. Claude waits for Step 2.
+              Azure OCR runs here. Claude waits for Step 2.
             </p>
           </div>
 
@@ -988,7 +989,7 @@ export function FinancialStatementAnalysisSection({
         <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <button
             type="button"
-            onClick={handleConvertWithTensorlake}
+            onClick={handleConvertWithOcr}
             disabled={
               converting ||
               runningAnalysis ||
@@ -997,7 +998,7 @@ export function FinancialStatementAnalysisSection({
             className="inline-flex items-center justify-center rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-900 hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {converting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {converting ? "Converting..." : "Convert with Tensorlake"}
+            {converting ? "Converting..." : "Convert with Azure OCR"}
           </button>
 
           {conversionStatus && (
@@ -1007,8 +1008,8 @@ export function FinancialStatementAnalysisSection({
           )}
         </div>
 
-        {tensorlakeError && (
-          <ErrorMessage message={tensorlakeError} />
+        {ocrError && (
+          <ErrorMessage message={ocrError} />
         )}
 
         {generatedTextFiles.length > 0 && (

@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import {
+  convertFinancialPdfsToText,
   FinancialAnalysisError,
   estimateFinancialStatementAnalysisCostFromText,
   type FinancialStatementJsonInput,
@@ -222,17 +223,6 @@ export async function POST(req: Request) {
       for (const doc of orderedDocs) {
         const extension = getFileExtension(doc.file_name || "");
 
-        if (extension === ".pdf" || doc.file_type === "application/pdf") {
-          return Response.json(
-            {
-              error: "PDF files must be converted with Tensorlake before Claude analysis",
-              code: "invalid_file_type",
-              detail: { fileName: doc.file_name, fileType: doc.file_type },
-            },
-            { status: 400 }
-          );
-        }
-
         const { data: fileData, error: downloadError } =
           await supabaseAdmin.storage.from(DOCUMENT_BUCKET).download(doc.file_path);
 
@@ -248,8 +238,44 @@ export async function POST(req: Request) {
           );
         }
 
-        const text = await fileData.text();
         const fileName = doc.file_name || "financial-statement.txt";
+
+        if (extension === ".pdf" || doc.file_type === "application/pdf") {
+          if (mode === "estimate") {
+            return Response.json(
+              {
+                error: "Convert the selected PDF with Azure OCR before requesting an exact estimate",
+                code: "invalid_file_type",
+                detail: { fileName: doc.file_name, fileType: doc.file_type },
+              },
+              { status: 400 }
+            );
+          }
+
+          const conversion = await convertFinancialPdfsToText([
+            {
+              id: doc.id,
+              fileName,
+              fileType: doc.file_type || "application/pdf",
+              file: fileData,
+            },
+          ]);
+
+          for (const generatedFile of conversion.generatedTextFiles) {
+            textDocuments.push({
+              id: generatedFile.id,
+              fileName: generatedFile.generatedFileName,
+              fileType: generatedFile.fileType,
+              text: generatedFile.text,
+              sourceFileName: generatedFile.originalFileName,
+              sourceKind: "generated_txt",
+            });
+          }
+
+          continue;
+        }
+
+        const text = await fileData.text();
 
         if (
           extension === ".json" ||

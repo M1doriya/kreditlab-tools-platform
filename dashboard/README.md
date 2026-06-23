@@ -1,5 +1,19 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## OCR configuration
+
+PDF-to-TXT conversion uses the self-hosted OCR service, not the hosted
+Tensorlake API. Configure:
+
+```bash
+OCR_SERVICE_URL=https://your-ocr-service.example.com
+OCR_SERVICE_API_KEY=...
+OCR_SERVICE_TIMEOUT_MS=240000
+```
+
+The OCR service owns the Azure and optional LLM Whisperer secrets. The dashboard
+only needs the service URL and bearer key.
+
 ## Getting Started
 
 First, run the development server:

@@ -6,7 +6,7 @@ backend, which was proven to reproduce Tensorlake's output at 100% value parity.
 
 POST /parse  (multipart: file=<pdf>)  ->  Tensorlake-parse-shaped JSON:
     { "chunks": [{"content": "<page markdown>"}...], "parsed_pages_count": N }
-so the dashboard's existing extractMarkdownFromTensorlakeResult() works unchanged.
+so the dashboard's OCR result parser works unchanged.
 
 Backup OCR: if the primary (Azure) path fails AND LLMWHISPERER_API_KEY is set,
 the request automatically falls back to LLMWhisperer (Unstract). Proven at 100%
@@ -109,6 +109,10 @@ def health():
     return {
         "status": "ok",
         "ocr_model": OCR_MODEL,
+        "azure_configured": bool(
+            os.environ.get("AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT")
+            and os.environ.get("AZURE_DOCUMENT_INTELLIGENCE_KEY")
+        ),
         "backup": "llmwhisperer" if LLMWHISPERER_API_KEY else None,
     }
 
@@ -126,7 +130,9 @@ def parse(
 
     # Primary: Azure (via OpenIngest). On failure, fall back to LLMWhisperer if configured.
     try:
-        return JSONResponse(_parse_azure(raw, file.filename, file.content_type))
+        return JSONResponse(
+            {**_parse_azure(raw, file.filename, file.content_type), "served_by": "azure"}
+        )
     except Exception as primary_err:
         if not LLMWHISPERER_API_KEY:
             raise HTTPException(status_code=502, detail=f"OCR failed: {type(primary_err).__name__}: {primary_err}")

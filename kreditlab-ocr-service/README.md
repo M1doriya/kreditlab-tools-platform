@@ -1,5 +1,22 @@
 # Open Ingest
 
+## Kredit Lab OCR service
+
+This repo is used here as a self-hosted OCR service for the dashboard:
+
+- Primary OCR: Azure Document Intelligence via `OCR_MODEL=azure-di`
+- Backup OCR: LLM Whisperer when `LLMWHISPERER_API_KEY` is set
+- API shape: `POST /parse` with multipart `file=<pdf>` returns
+  Tensorlake-parse-shaped JSON (`chunks[]`, `parsed_pages_count`) so existing
+  dashboard parsing code can read it.
+- Auth: set `SERVICE_API_KEY` on this service and `OCR_SERVICE_API_KEY` on the
+  dashboard. The dashboard also needs `OCR_SERVICE_URL`.
+
+Azure secrets stay in this OCR service deployment:
+`AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT` and `AZURE_DOCUMENT_INTELLIGENCE_KEY`.
+Do not put those values in the dashboard unless the dashboard is also hosting
+OCR itself.
+
 [![ci](https://github.com/tensorlakeai/openingest/actions/workflows/ci.yml/badge.svg)](https://github.com/tensorlakeai/openingest/actions/workflows/ci.yml)
 
 Open Ingest is a distributed ingestion API that turns unstructured data into LLM-ready outputs: layout-aware markdown, structured data from charts and figures.

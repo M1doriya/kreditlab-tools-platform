@@ -9,6 +9,5 @@ uvicorn[standard]
 python-multipart
 anthropic
 ftfy
-tensorlake
 pypdf
 requests

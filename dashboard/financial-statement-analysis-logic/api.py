@@ -5,7 +5,7 @@ but this standalone service still needs to work when the financial tool is used
 directly. Keep the checked-in renderer as the source of truth while exposing the
 same practical flow:
 
-PDF -> Tensorlake markdown -> Claude JSON -> renderer HTML
+PDF -> OCR service markdown -> Claude JSON -> renderer HTML
 TXT/MD -> Claude JSON -> renderer HTML
 JSON -> renderer HTML
 """
@@ -58,11 +58,9 @@ TEXT_UPLOAD_EXTENSIONS = [".txt", ".md"]
 JSON_UPLOAD_EXTENSIONS = [".json"]
 PDF_UPLOAD_EXTENSIONS = [".pdf"]
 
-TENSORLAKE_API_BASE = "https://api.tensorlake.ai/documents/v2"
 ANTHROPIC_MESSAGES_URL = "https://api.anthropic.com/v1/messages"
 ANTHROPIC_VERSION = "2023-06-01"
-DEFAULT_TENSORLAKE_TIMEOUT_SECONDS = 240
-TENSORLAKE_POLL_INTERVAL_SECONDS = 2.5
+DEFAULT_OCR_SERVICE_TIMEOUT_SECONDS = 240
 DEFAULT_ANTHROPIC_MAX_TOKENS = 64000
 
 CLAUDE_SCHEMA_INSTRUCTIONS_FILE = Path(__file__).with_name(
@@ -114,7 +112,8 @@ def health() -> dict[str, Any]:
         "active_flow": "pdf_txt_md_json_pipeline",
         "supported_upload_extensions": SUPPORTED_UPLOAD_EXTENSIONS,
         "has_anthropic_api_key": bool(get_anthropic_api_key()),
-        "has_tensorlake_api_key": bool(os.getenv("TENSORLAKE_API_KEY")),
+        "has_ocr_service_url": bool(ocr_service_url()),
+        "has_ocr_service_api_key": bool(ocr_service_api_key()),
         "default_claude_model": default_model,
         "convert_endpoint": "/convert",
         "analyze_endpoint": "/analyze",
@@ -141,7 +140,7 @@ async def convert(files: list[UploadFile] = File(..., alias="file")) -> dict[str
                 {"file_name": file_name, "content_type": upload.content_type},
             )
 
-        markdown, metadata = extract_pdf_markdown_with_tensorlake(
+        markdown, metadata = extract_pdf_markdown_with_ocr_service(
             file_name=file_name,
             content_type=upload.content_type,
             raw_bytes=raw_bytes,
@@ -155,9 +154,9 @@ async def convert(files: list[UploadFile] = File(..., alias="file")) -> dict[str
                 "fileType": "text/plain",
                 "text": markdown,
                 "textLength": len(markdown),
-                "tensorlakeFileId": metadata.get("file_id"),
-                "tensorlakeParseId": metadata.get("parse_id"),
-                "tensorlakePagesParsed": metadata.get("pages_parsed"),
+                "ocrProvider": metadata.get("provider"),
+                "ocrPagesParsed": metadata.get("pages_parsed"),
+                "servedBy": metadata.get("served_by"),
             }
         )
 
@@ -222,7 +221,7 @@ async def analyze(
             continue
 
         if is_pdf_upload(file_name, content_type):
-            markdown, metadata = extract_pdf_markdown_with_tensorlake(
+            markdown, metadata = extract_pdf_markdown_with_ocr_service(
                 file_name=file_name,
                 content_type=content_type,
                 raw_bytes=raw_bytes,
@@ -231,17 +230,17 @@ async def analyze(
                 {
                     "file_name": generated_text_file_name(file_name),
                     "file_type": "text/plain",
-                    "source_kind": "tensorlake_markdown",
+                    "source_kind": "ocr_markdown",
                     "text": markdown,
                 }
             )
             extraction.append(
                 {
                     "file_name": file_name,
-                    "source_kind": "tensorlake_markdown",
-                    "tensorlake_file_id": metadata.get("file_id"),
-                    "tensorlake_parse_id": metadata.get("parse_id"),
-                    "tensorlake_pages_parsed": metadata.get("pages_parsed"),
+                    "source_kind": "ocr_markdown",
+                    "ocr_provider": metadata.get("provider"),
+                    "ocr_pages_parsed": metadata.get("pages_parsed"),
+                    "served_by": metadata.get("served_by"),
                 }
             )
             continue
@@ -617,224 +616,87 @@ def parse_claude_json(text: str) -> dict[str, Any]:
     return parsed
 
 
-def extract_pdf_markdown_with_tensorlake(
+def extract_pdf_markdown_with_ocr_service(
     file_name: str,
     content_type: str | None,
     raw_bytes: bytes,
 ) -> tuple[str, dict[str, Any]]:
-    api_key = os.getenv("TENSORLAKE_API_KEY", "")
+    base_url = ocr_service_url()
 
-    if not api_key:
+    if not base_url:
         raise api_error(
             500,
-            "missing_tensorlake_api_key",
-            "TENSORLAKE_API_KEY is missing.",
+            "missing_ocr_service_url",
+            "OCR_SERVICE_URL is missing.",
         )
 
-    file_id = upload_tensorlake_file(file_name, content_type, raw_bytes, api_key)
-    parse_id = start_tensorlake_parse(file_name, content_type, file_id, api_key)
-    parse_result = poll_tensorlake_parse(parse_id, api_key)
-    markdown = extract_markdown_from_tensorlake_result(parse_result).strip()
-    pages_parsed = get_number_from_path(parse_result, ["usage", "pages_parsed"])
+    headers: dict[str, str] = {}
+    api_key = ocr_service_api_key()
+
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
+
+    try:
+        response = requests.post(
+            f"{base_url}/parse",
+            headers=headers,
+            files={
+                "file": (
+                    file_name,
+                    raw_bytes,
+                    get_upload_mime_type(file_name, content_type),
+                )
+            },
+            timeout=ocr_service_timeout_seconds(),
+        )
+    except requests.RequestException as exc:
+        raise api_error(
+            502,
+            "ocr_extraction_failure",
+            "OCR service request failed.",
+            {"detail": str(exc)},
+        ) from exc
+
+    response_body = read_response_body(response)
+
+    if not response.ok:
+        raise api_error(
+            502,
+            "ocr_extraction_failure",
+            "OCR service extraction failed.",
+            {"status": response.status_code, "body": response_body},
+        )
+
+    markdown = extract_markdown_from_ocr_result(response_body).strip()
+    pages_parsed = get_number_from_path(response_body, ["usage", "pages_parsed"])
     if pages_parsed is None:
-        pages_parsed = get_number_from_path(parse_result, ["parsed_pages_count"])
+        pages_parsed = get_number_from_path(response_body, ["parsed_pages_count"])
+    served_by = get_string_from_mapping(response_body, "served_by")
+    provider = (
+        served_by
+        or get_string_from_mapping(response_body, "provider")
+        or get_string_from_mapping(response_body, "ocr_model")
+        or "azure"
+    )
 
     if not markdown:
         raise api_error(
             502,
-            "tensorlake_empty_output",
-            "Tensorlake did not return markdown content.",
-            {"parse_id": parse_id, "file_name": file_name},
+            "ocr_empty_output",
+            "OCR service did not return markdown content.",
+            {"file_name": file_name, "provider": provider},
         )
 
     return markdown, {
-        "file_id": file_id,
-        "parse_id": parse_id,
+        "file_id": get_string_from_mapping(response_body, "file_id"),
+        "parse_id": get_string_from_mapping(response_body, "parse_id"),
         "pages_parsed": pages_parsed,
+        "provider": provider,
+        "served_by": served_by,
     }
 
 
-def upload_tensorlake_file(
-    file_name: str,
-    content_type: str | None,
-    raw_bytes: bytes,
-    api_key: str,
-) -> str:
-    try:
-        response = requests.put(
-            f"{TENSORLAKE_API_BASE}/files",
-            headers={"Authorization": f"Bearer {api_key}"},
-            files={
-                "file_bytes": (
-                    file_name,
-                    raw_bytes,
-                    get_tensorlake_mime_type(file_name, content_type),
-                )
-            },
-            data={
-                "labels": json.dumps(
-                    {"source": "kredit_lab_financial_tool", "tool": "financial_statement"}
-                )
-            },
-            timeout=60,
-        )
-    except requests.RequestException as exc:
-        raise api_error(
-            502,
-            "pdf_upload_failure",
-            "Tensorlake file upload failed.",
-            {"detail": str(exc)},
-        ) from exc
-
-    response_body = read_response_body(response)
-
-    if not response.ok:
-        raise api_error(
-            502,
-            "pdf_upload_failure",
-            "Tensorlake file upload failed.",
-            {"status": response.status_code, "body": response_body},
-        )
-
-    if not isinstance(response_body, dict) or not isinstance(
-        response_body.get("file_id"), str
-    ):
-        raise api_error(
-            502,
-            "tensorlake_extraction_failure",
-            "Tensorlake upload returned a malformed response.",
-            response_body,
-        )
-
-    return response_body["file_id"]
-
-
-def start_tensorlake_parse(
-    file_name: str,
-    content_type: str | None,
-    file_id: str,
-    api_key: str,
-) -> str:
-    try:
-        response = requests.post(
-            f"{TENSORLAKE_API_BASE}/parse",
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "file_id": file_id,
-                "file_name": file_name,
-                "mime_type": get_tensorlake_mime_type(file_name, content_type),
-                "parsing_options": {
-                    "table_output_mode": "markdown",
-                    "table_parsing_format": "tsr",
-                    "chunking_strategy": "fragment",
-                    "signature_detection": False,
-                    "remove_strikethrough_lines": False,
-                    "skew_detection": False,
-                    "disable_layout_detection": False,
-                    "ignore_sections": [],
-                    "cross_page_header_detection": False,
-                    "include_images": False,
-                    "barcode_detection": False,
-                    "merge_tables": False,
-                    "ocr_model": "model03",
-                },
-                "labels": {
-                    "source": "kredit_lab_financial_tool",
-                    "tool": "financial_statement",
-                },
-            },
-            timeout=60,
-        )
-    except requests.RequestException as exc:
-        raise api_error(
-            502,
-            "tensorlake_extraction_failure",
-            "Tensorlake parse request failed.",
-            {"detail": str(exc)},
-        ) from exc
-
-    response_body = read_response_body(response)
-
-    if not response.ok:
-        raise api_error(
-            502,
-            "tensorlake_extraction_failure",
-            "Tensorlake parse request failed.",
-            {"status": response.status_code, "body": response_body},
-        )
-
-    if not isinstance(response_body, dict) or not isinstance(
-        response_body.get("parse_id"), str
-    ):
-        raise api_error(
-            502,
-            "tensorlake_extraction_failure",
-            "Tensorlake parse request returned a malformed response.",
-            response_body,
-        )
-
-    return response_body["parse_id"]
-
-
-def poll_tensorlake_parse(parse_id: str, api_key: str) -> Any:
-    timeout_seconds = tensorlake_timeout_seconds()
-    deadline = time.monotonic() + timeout_seconds
-    latest_result: Any = None
-
-    while time.monotonic() < deadline:
-        try:
-            response = requests.get(
-                f"{TENSORLAKE_API_BASE}/parse/{parse_id}",
-                headers={"Authorization": f"Bearer {api_key}"},
-                timeout=30,
-            )
-        except requests.RequestException as exc:
-            raise api_error(
-                502,
-                "tensorlake_extraction_failure",
-                "Tensorlake parse polling failed.",
-                {"detail": str(exc)},
-            ) from exc
-
-        latest_result = read_response_body(response)
-
-        if not response.ok:
-            raise api_error(
-                502,
-                "tensorlake_extraction_failure",
-                "Tensorlake parse polling failed.",
-                {"status": response.status_code, "body": latest_result},
-            )
-
-        status = ""
-        if isinstance(latest_result, dict):
-            status = str(latest_result.get("status") or "").lower()
-
-        if status == "successful":
-            return latest_result
-
-        if status in {"failure", "failed"}:
-            raise api_error(
-                502,
-                "tensorlake_extraction_failure",
-                "Tensorlake extraction failed.",
-                latest_result,
-            )
-
-        time.sleep(TENSORLAKE_POLL_INTERVAL_SECONDS)
-
-    raise api_error(
-        504,
-        "tensorlake_extraction_failure",
-        "Tensorlake extraction timed out.",
-        {"parse_id": parse_id, "latest_result": latest_result},
-    )
-
-
-def extract_markdown_from_tensorlake_result(result: Any) -> str:
+def extract_markdown_from_ocr_result(result: Any) -> str:
     if not isinstance(result, dict):
         return ""
 
@@ -933,7 +795,7 @@ def is_pdf_upload(file_name: str, content_type: str | None) -> bool:
     return file_name.lower().endswith(".pdf") or content_type == "application/pdf"
 
 
-def get_tensorlake_mime_type(file_name: str, content_type: str | None) -> str:
+def get_upload_mime_type(file_name: str, content_type: str | None) -> str:
     if content_type:
         return content_type
 
@@ -991,6 +853,38 @@ def resolve_claude_effort(model: str) -> str | None:
 
 def get_anthropic_api_key() -> str:
     return os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API_KEY") or ""
+
+
+def ocr_service_url() -> str:
+    return (
+        os.getenv("OCR_SERVICE_URL")
+        or os.getenv("FINANCIAL_OCR_SERVICE_URL")
+        or ""
+    ).rstrip("/")
+
+
+def ocr_service_api_key() -> str:
+    return os.getenv("OCR_SERVICE_API_KEY") or os.getenv("SERVICE_API_KEY") or ""
+
+
+def ocr_service_timeout_seconds() -> int | float:
+    timeout_ms = positive_number_env("OCR_SERVICE_TIMEOUT_MS", 0)
+
+    if timeout_ms > 0:
+        return timeout_ms / 1000
+
+    return positive_number_env(
+        "OCR_SERVICE_TIMEOUT_SECONDS",
+        DEFAULT_OCR_SERVICE_TIMEOUT_SECONDS,
+    )
+
+
+def get_string_from_mapping(value: Any, key: str) -> str | None:
+    if not isinstance(value, dict):
+        return None
+
+    item = value.get(key)
+    return item.strip() if isinstance(item, str) and item.strip() else None
 
 
 def merge_claude_usage(*usages: Any) -> dict[str, Any] | None:
@@ -1131,18 +1025,6 @@ def positive_number_env(name: str, fallback: int | float) -> int | float:
         return fallback
 
     return value if value > 0 else fallback
-
-
-def tensorlake_timeout_seconds() -> int | float:
-    timeout_ms = positive_number_env("TENSORLAKE_PARSE_TIMEOUT_MS", 0)
-
-    if timeout_ms > 0:
-        return timeout_ms / 1000
-
-    return positive_number_env(
-        "TENSORLAKE_PARSE_TIMEOUT_SECONDS",
-        DEFAULT_TENSORLAKE_TIMEOUT_SECONDS,
-    )
 
 
 def generated_text_file_name(file_name: str) -> str:

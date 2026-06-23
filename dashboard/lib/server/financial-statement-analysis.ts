@@ -13,7 +13,7 @@ import {
 type JsonRecord = Record<string, unknown>;
 
 type FinancialStatementSourceKind =
-  | "tensorlake_markdown"
+  | "ocr_markdown"
   | "markdown"
   | "text"
   | "json";
@@ -24,10 +24,12 @@ type ExtractedFinancialStatement = {
   sourceKind: FinancialStatementSourceKind;
   markdown?: string;
   analysisJson?: JsonRecord;
-  tensorlake?: {
-    fileId: string;
-    parseId: string;
+  ocr?: {
+    fileId?: string;
+    parseId?: string;
     pagesParsed?: number;
+    provider?: string;
+    servedBy?: string;
   };
 };
 
@@ -45,7 +47,7 @@ type ClaudeMessagesResult = {
 };
 
 type FinancialStageLogInput = {
-  stage: "renderer" | "tensorlake_conversion" | "claude_analysis";
+  stage: "renderer" | "ocr_conversion" | "claude_analysis";
   files?: Array<{
     fileName: string;
     fileType: string | null;
@@ -121,8 +123,9 @@ export type FinancialStatementConversionResult = {
     fileType: "text/plain";
     text: string;
     textLength: number;
-    tensorlakeParseId?: string;
-    tensorlakePagesParsed?: number;
+    ocrProvider?: string;
+    ocrPagesParsed?: number;
+    servedBy?: string;
   }>;
 };
 
@@ -142,8 +145,9 @@ export type FinancialStatementAnalysisResult = {
   extraction: Array<{
     file_name: string;
     source_kind: FinancialStatementSourceKind;
-    tensorlake_parse_id?: string;
-    tensorlake_pages_parsed?: number;
+    ocr_provider?: string;
+    ocr_pages_parsed?: number;
+    served_by?: string;
   }>;
   claude?: {
     model: string;
@@ -162,11 +166,11 @@ export type FinancialAnalysisExportArtifact = {
 export type FinancialAnalysisErrorCode =
   | "missing_input"
   | "missing_claude_api_key"
-  | "missing_tensorlake_api_key"
+  | "missing_ocr_service_url"
   | "invalid_file_type"
   | "pdf_upload_failure"
-  | "tensorlake_extraction_failure"
-  | "tensorlake_empty_output"
+  | "ocr_extraction_failure"
+  | "ocr_empty_output"
   | "text_file_empty"
   | "invalid_claude_model"
   | "claude_auth_failure"
@@ -199,15 +203,13 @@ export class FinancialAnalysisError extends Error {
   }
 }
 
-const TENSORLAKE_API_BASE = "https://api.tensorlake.ai/documents/v2";
 const ANTHROPIC_MESSAGES_URL = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_VERSION = "2023-06-01";
 const DEFAULT_ANTHROPIC_MAX_TOKENS = 64000;
-const DEFAULT_TENSORLAKE_TIMEOUT_MS = 240000;
+const DEFAULT_OCR_SERVICE_TIMEOUT_MS = 240000;
 const DEFAULT_RENDERER_TIMEOUT_MS = 60000;
 const DEFAULT_FINANCIAL_RENDERER_API_URL =
   "https://financial-statement-analysis.kreditlab.my";
-const TENSORLAKE_POLL_INTERVAL_MS = 2500;
 const FINANCIAL_LOGIC_DIR = path.join(
   process.cwd(),
   "financial-statement-analysis-logic"
@@ -257,19 +259,18 @@ export async function convertFinancialPdfsToText(
   }
 
   logFinancialStage({
-    stage: "tensorlake_conversion",
+    stage: "ocr_conversion",
     files: documents.map(getDocumentLogInfo),
     extra: {
-      hasTensorlakeApiKey: Boolean(process.env.TENSORLAKE_API_KEY),
+      hasOcrServiceUrl: Boolean(getOcrServiceUrl()),
+      hasOcrServiceApiKey: Boolean(getOcrServiceApiKey()),
     },
   });
 
-  const tensorlakeApiKey = process.env.TENSORLAKE_API_KEY;
-
-  if (!tensorlakeApiKey) {
+  if (!getOcrServiceUrl()) {
     throw new FinancialAnalysisError(
-      "missing_tensorlake_api_key",
-      "TENSORLAKE_API_KEY is missing",
+      "missing_ocr_service_url",
+      "OCR_SERVICE_URL is missing",
       500
     );
   }
@@ -296,18 +297,15 @@ export async function convertFinancialPdfsToText(
       );
     }
 
-    const tensorlakeResult = await extractPdfWithTensorlake(
-      document,
-      tensorlakeApiKey
-    );
-    const text = tensorlakeResult.markdown.trim();
+    const ocrResult = await extractPdfWithOcrService(document);
+    const text = ocrResult.markdown.trim();
 
     if (!text) {
       throw new FinancialAnalysisError(
-        "tensorlake_empty_output",
-        "Tensorlake returned empty text",
+        "ocr_empty_output",
+        "OCR service returned empty text",
         502,
-        { fileName: document.fileName, parseId: tensorlakeResult.parseId }
+        { fileName: document.fileName, provider: ocrResult.provider }
       );
     }
 
@@ -318,13 +316,14 @@ export async function convertFinancialPdfsToText(
       fileType: "text/plain",
       text,
       textLength: text.length,
-      tensorlakeParseId: tensorlakeResult.parseId,
-      tensorlakePagesParsed: tensorlakeResult.pagesParsed,
+      ocrProvider: ocrResult.provider,
+      ocrPagesParsed: ocrResult.pagesParsed,
+      servedBy: ocrResult.servedBy,
     });
   }
 
   logFinancialStage({
-    stage: "tensorlake_conversion",
+    stage: "ocr_conversion",
     files: documents.map(getDocumentLogInfo),
     generatedTextLength: generatedTextFiles.reduce(
       (total, file) => total + file.textLength,
@@ -603,8 +602,9 @@ export async function runFinancialStatementAnalysis(
     extraction: extracted.map((item) => ({
       file_name: item.fileName,
       source_kind: item.sourceKind,
-      tensorlake_parse_id: item.tensorlake?.parseId,
-      tensorlake_pages_parsed: item.tensorlake?.pagesParsed,
+      ocr_provider: item.ocr?.provider,
+      ocr_pages_parsed: item.ocr?.pagesParsed,
+      served_by: item.ocr?.servedBy,
     })),
     claude: claude
       ? {
@@ -687,30 +687,27 @@ async function extractFinancialStatements(
     }
 
     if (extension === ".pdf" || isPdfMimeType(document.fileType)) {
-      const tensorlakeApiKey = process.env.TENSORLAKE_API_KEY;
-
-      if (!tensorlakeApiKey) {
+      if (!getOcrServiceUrl()) {
         throw new FinancialAnalysisError(
-          "missing_tensorlake_api_key",
-          "TENSORLAKE_API_KEY is missing",
+          "missing_ocr_service_url",
+          "OCR_SERVICE_URL is missing",
           500
         );
       }
 
-      const tensorlakeResult = await extractPdfWithTensorlake(
-        document,
-        tensorlakeApiKey
-      );
+      const ocrResult = await extractPdfWithOcrService(document);
 
       extracted.push({
         fileName: document.fileName,
         fileType: document.fileType,
-        sourceKind: "tensorlake_markdown",
-        markdown: tensorlakeResult.markdown,
-        tensorlake: {
-          fileId: tensorlakeResult.fileId,
-          parseId: tensorlakeResult.parseId,
-          pagesParsed: tensorlakeResult.pagesParsed,
+        sourceKind: "ocr_markdown",
+        markdown: ocrResult.markdown,
+        ocr: {
+          fileId: ocrResult.fileId,
+          parseId: ocrResult.parseId,
+          pagesParsed: ocrResult.pagesParsed,
+          provider: ocrResult.provider,
+          servedBy: ocrResult.servedBy,
         },
       });
       continue;
@@ -807,187 +804,107 @@ function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
   return copy.buffer;
 }
 
-async function extractPdfWithTensorlake(
-  document: FinancialStatementDocumentInput,
-  apiKey: string
+async function extractPdfWithOcrService(
+  document: FinancialStatementDocumentInput
 ) {
-  const fileId = await uploadTensorlakeFile(document, apiKey);
-  const parseId = await startTensorlakeParse(document, fileId, apiKey);
-  const parseResult = await pollTensorlakeParse(parseId, apiKey);
-  const markdown = extractMarkdownFromTensorlakeResult(parseResult);
-  const pagesParsed = getNumberFromPath(parseResult, ["usage", "pages_parsed"])
-    ?? getNumberFromPath(parseResult, ["parsed_pages_count"])
-    ?? undefined;
+  const baseUrl = getOcrServiceUrl();
 
-  if (!markdown.trim()) {
+  if (!baseUrl) {
     throw new FinancialAnalysisError(
-      "tensorlake_empty_output",
-      "Tensorlake did not return markdown content",
-      502,
-      { parseId, fileName: document.fileName }
+      "missing_ocr_service_url",
+      "OCR_SERVICE_URL is missing",
+      500
     );
   }
 
-  return { fileId, parseId, markdown, pagesParsed };
-}
-
-async function uploadTensorlakeFile(
-  document: FinancialStatementDocumentInput,
-  apiKey: string
-) {
   const formData = new FormData();
-  formData.append("file_bytes", document.file, document.fileName);
-  formData.append(
-    "labels",
-    JSON.stringify({
-      source: "kredit_lab_dashboard",
-      tool: "financial_statement",
-    })
-  );
+  formData.append("file", document.file, document.fileName);
 
-  const response = await fetch(`${TENSORLAKE_API_BASE}/files`, {
-    method: "PUT",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: formData,
-  });
+  const timeoutMs = getPositiveNumberEnv(
+    "OCR_SERVICE_TIMEOUT_MS",
+    DEFAULT_OCR_SERVICE_TIMEOUT_MS
+  );
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  const headers: Record<string, string> = {};
+  const apiKey = getOcrServiceApiKey();
+
+  if (apiKey) {
+    headers.Authorization = `Bearer ${apiKey}`;
+  }
+
+  let response: Response | null = null;
+
+  try {
+    response = await fetch(`${baseUrl}/parse`, {
+      method: "POST",
+      headers,
+      body: formData,
+      signal: controller.signal,
+    });
+  } catch (error) {
+    const isAbort = error instanceof Error && error.name === "AbortError";
+
+    throw new FinancialAnalysisError(
+      "ocr_extraction_failure",
+      isAbort ? "OCR service request timed out" : "OCR service request failed",
+      isAbort ? 504 : 502,
+      {
+        fileName: document.fileName,
+        detail: error instanceof Error ? error.message : String(error),
+      }
+    );
+  } finally {
+    clearTimeout(timeout);
+  }
+
+  if (!response) {
+    throw new FinancialAnalysisError(
+      "ocr_extraction_failure",
+      "OCR service request failed",
+      502,
+      { fileName: document.fileName }
+    );
+  }
+
   const responseBody = await readResponseBody(response);
 
   if (!response.ok) {
     throw new FinancialAnalysisError(
-      "pdf_upload_failure",
-      "Tensorlake file upload failed",
+      "ocr_extraction_failure",
+      "OCR service extraction failed",
       502,
       { status: response.status, body: responseBody }
     );
   }
 
-  if (!isRecord(responseBody) || typeof responseBody.file_id !== "string") {
+  const markdown = extractMarkdownFromOcrResult(responseBody);
+  const pagesParsed =
+    getNumberFromPath(responseBody, ["parsed_pages_count"]) ??
+    getNumberFromPath(responseBody, ["usage", "pages_parsed"]) ??
+    undefined;
+  const fileId = getStringFromRecord(responseBody, "file_id");
+  const parseId = getStringFromRecord(responseBody, "parse_id");
+  const servedBy = getStringFromRecord(responseBody, "served_by");
+  const provider =
+    servedBy ||
+    getStringFromRecord(responseBody, "provider") ||
+    getStringFromRecord(responseBody, "ocr_model") ||
+    "azure";
+
+  if (!markdown.trim()) {
     throw new FinancialAnalysisError(
-      "tensorlake_extraction_failure",
-      "Tensorlake upload returned a malformed response",
+      "ocr_empty_output",
+      "OCR service did not return markdown content",
       502,
-      responseBody
+      { fileName: document.fileName, provider, responseBody }
     );
   }
 
-  return responseBody.file_id;
+  return { fileId, parseId, markdown, pagesParsed, provider, servedBy };
 }
 
-async function startTensorlakeParse(
-  document: FinancialStatementDocumentInput,
-  fileId: string,
-  apiKey: string
-) {
-  const response = await fetch(`${TENSORLAKE_API_BASE}/parse`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      file_id: fileId,
-      file_name: document.fileName,
-      mime_type: getTensorlakeMimeType(document),
-      parsing_options: {
-        table_output_mode: "markdown",
-        table_parsing_format: "tsr",
-        chunking_strategy: "fragment",
-        signature_detection: false,
-        remove_strikethrough_lines: false,
-        skew_detection: false,
-        disable_layout_detection: false,
-        ignore_sections: [],
-        cross_page_header_detection: false,
-        include_images: false,
-        barcode_detection: false,
-        merge_tables: false,
-        ocr_model: "model03",
-      },
-      labels: {
-        source: "kredit_lab_dashboard",
-        tool: "financial_statement",
-      },
-    }),
-  });
-  const responseBody = await readResponseBody(response);
-
-  if (!response.ok) {
-    throw new FinancialAnalysisError(
-      "tensorlake_extraction_failure",
-      "Tensorlake parse request failed",
-      502,
-      responseBody
-    );
-  }
-
-  if (!isRecord(responseBody) || typeof responseBody.parse_id !== "string") {
-    throw new FinancialAnalysisError(
-      "tensorlake_extraction_failure",
-      "Tensorlake parse request returned a malformed response",
-      502,
-      responseBody
-    );
-  }
-
-  return responseBody.parse_id;
-}
-
-async function pollTensorlakeParse(parseId: string, apiKey: string) {
-  const timeoutMs = getPositiveNumberEnv(
-    "TENSORLAKE_PARSE_TIMEOUT_MS",
-    DEFAULT_TENSORLAKE_TIMEOUT_MS
-  );
-  const deadline = Date.now() + timeoutMs;
-  let latestResult: unknown = null;
-
-  while (Date.now() < deadline) {
-    const response = await fetch(`${TENSORLAKE_API_BASE}/parse/${parseId}`, {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-      },
-    });
-    latestResult = await readResponseBody(response);
-
-    if (!response.ok) {
-      throw new FinancialAnalysisError(
-        "tensorlake_extraction_failure",
-        "Tensorlake parse polling failed",
-        502,
-        latestResult
-      );
-    }
-
-    const status = isRecord(latestResult)
-      ? String(latestResult.status || "").toLowerCase()
-      : "";
-
-    if (status === "successful") {
-      return latestResult;
-    }
-
-    if (status === "failure" || status === "failed") {
-      throw new FinancialAnalysisError(
-        "tensorlake_extraction_failure",
-        "Tensorlake extraction failed",
-        502,
-        latestResult
-      );
-    }
-
-    await sleep(TENSORLAKE_POLL_INTERVAL_MS);
-  }
-
-  throw new FinancialAnalysisError(
-    "tensorlake_extraction_failure",
-    "Tensorlake extraction timed out",
-    504,
-    { parseId, latestResult }
-  );
-}
-
-function extractMarkdownFromTensorlakeResult(result: unknown) {
+function extractMarkdownFromOcrResult(result: unknown) {
   if (!isRecord(result)) return "";
 
   const chunks = Array.isArray(result.chunks) ? result.chunks : [];
@@ -3601,22 +3518,6 @@ function slugifyFileName(fileName: string) {
     .slice(0, 80);
 }
 
-function getTensorlakeMimeType(document: FinancialStatementDocumentInput) {
-  if (isPdfMimeType(document.fileType)) return "application/pdf";
-  if (isMarkdownMimeType(document.fileType)) return "text/markdown";
-  if (isTextMimeType(document.fileType)) return "text/plain";
-  if (isJsonMimeType(document.fileType)) return "application/json";
-
-  const extension = getFileExtension(document.fileName);
-
-  if (extension === ".pdf") return "application/pdf";
-  if (extension === ".md") return "text/markdown";
-  if (extension === ".txt") return "text/plain";
-  if (extension === ".json") return "application/json";
-
-  return "application/octet-stream";
-}
-
 function parseUploadedAnalysisJson(text: string, fileName: string): JsonRecord {
   try {
     const parsed = JSON.parse(text);
@@ -3704,8 +3605,23 @@ function getPositiveNumberEnv(name: string, fallback: number) {
   return Number.isFinite(value) && value > 0 ? value : fallback;
 }
 
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+function getOcrServiceUrl() {
+  return (
+    process.env.OCR_SERVICE_URL ||
+    process.env.FINANCIAL_OCR_SERVICE_URL ||
+    ""
+  ).replace(/\/+$/, "");
+}
+
+function getOcrServiceApiKey() {
+  return process.env.OCR_SERVICE_API_KEY || process.env.SERVICE_API_KEY || "";
+}
+
+function getStringFromRecord(value: unknown, key: string) {
+  if (!isRecord(value)) return undefined;
+  const item = value[key];
+
+  return typeof item === "string" && item.trim() ? item : undefined;
 }
 
 function getNumberFromPath(value: unknown, path: string[]) {
