@@ -177,6 +177,33 @@ const getErrorDetailMessage = (detail: unknown): string => {
 
   if (typeof detail.message === "string") return detail.message;
 
+  const failures = detail.failures;
+  if (Array.isArray(failures)) {
+    const failureDetails = failures
+      .map((failure) =>
+        isObjectRecord(failure) ? getErrorDetailMessage(failure.detail) : ""
+      )
+      .filter(Boolean)
+      .slice(0, 2);
+
+    if (failureDetails.length > 0) return failureDetails.join("; ");
+  }
+
+  const trigger = detail.trigger;
+  if (isObjectRecord(trigger)) {
+    const triggerMessage = getErrorDetailMessage(trigger);
+    if (triggerMessage) return triggerMessage;
+  }
+
+  const attemptedOcrServiceUrls = detail.attemptedOcrServiceUrls;
+  if (Array.isArray(attemptedOcrServiceUrls)) {
+    const urls = attemptedOcrServiceUrls
+      .filter((item): item is string => typeof item === "string")
+      .slice(0, 3);
+
+    if (urls.length > 0) return `Attempted OCR URLs: ${urls.join(", ")}`;
+  }
+
   const stdoutTail = detail.stdoutTail;
   if (typeof stdoutTail === "string" && stdoutTail.trim()) {
     return stdoutTail.trim().split(/\r?\n/).slice(-3).join("; ");
@@ -212,6 +239,10 @@ const getErrorMessage = (
 
   return code ? `${message} (${code})` : message;
 };
+
+const isFetchNetworkError = (error: unknown) =>
+  error instanceof TypeError &&
+  /failed to fetch|networkerror|load failed/i.test(error.message);
 
 const isPdfFile = (fileName: string, fileType: string | null) =>
   fileName.toLowerCase().endsWith(".pdf") || fileType === "application/pdf";
@@ -569,7 +600,9 @@ export function FinancialStatementAnalysisSection({
     } catch (conversionError) {
       setConversionStatus("");
       setOcrError(
-        conversionError instanceof Error
+        isFetchNetworkError(conversionError)
+          ? "Dashboard OCR request could not reach the server route. Redeploy Railway and check the latest /api/convert-financial-pdf logs."
+          : conversionError instanceof Error
           ? conversionError.message
           : String(conversionError)
       );

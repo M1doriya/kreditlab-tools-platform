@@ -28,14 +28,6 @@ optional backup.
 SERVICE_API_KEY=...
 ```
 
-`OCR_SERVICE_URL` is optional. On Railway it defaults to:
-
-```text
-http://kreditlab-tools-platform.railway.internal:8000
-```
-
-During local development it defaults to:
-
-```text
-http://127.0.0.1:8000
-```
+`OCR_SERVICE_URL` is optional. Leave it blank in the current single-service
+Railway deployment so the dashboard runs Azure OCR directly from
+`AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT` and `AZURE_DOCUMENT_INTELLIGENCE_KEY`.

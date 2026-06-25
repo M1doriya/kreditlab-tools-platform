@@ -206,12 +206,6 @@ const ANTHROPIC_MESSAGES_URL = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_VERSION = "2023-06-01";
 const DEFAULT_ANTHROPIC_MAX_TOKENS = 64000;
 const DEFAULT_OCR_SERVICE_TIMEOUT_MS = 240000;
-const DEFAULT_RAILWAY_OCR_SERVICE_URL =
-  "http://kreditlab-tools-platform.railway.internal";
-const DEFAULT_RAILWAY_OCR_SERVICE_PORT_URL =
-  "http://kreditlab-tools-platform.railway.internal:8000";
-const DEFAULT_RAILWAY_OCR_SERVICE_PUBLIC_URL =
-  "https://kreditlab-tools-platform-production.up.railway.app";
 const DEFAULT_LOCAL_OCR_SERVICE_URL = "http://127.0.0.1:8000";
 const DEFAULT_RENDERER_TIMEOUT_MS = 60000;
 const DEFAULT_FINANCIAL_RENDERER_API_URL =
@@ -269,7 +263,8 @@ export async function convertFinancialPdfsToText(
     stage: "ocr_conversion",
     files: documents.map(getDocumentLogInfo),
     extra: {
-      hasOcrServiceUrl: Boolean(getOcrServiceUrl()),
+      hasOcrServiceUrl: hasConfiguredOcrServiceUrl(),
+      hasAzureDocumentIntelligenceConfig: hasAzureDocumentIntelligenceConfig(),
       hasOcrServiceApiKey: Boolean(getOcrServiceApiKey()),
     },
   });
@@ -798,12 +793,41 @@ function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
 async function extractPdfWithOcrService(
   document: FinancialStatementDocumentInput
 ) {
-  const baseUrls = getOcrServiceUrls();
-
   const timeoutMs = getPositiveNumberEnv(
     "OCR_SERVICE_TIMEOUT_MS",
     DEFAULT_OCR_SERVICE_TIMEOUT_MS
   );
+
+  if (!hasConfiguredOcrServiceUrl() && hasAzureDocumentIntelligenceConfig()) {
+    const directAzureResult = await tryExtractPdfWithAzureFallback(
+      document,
+      timeoutMs,
+      { reason: "direct_azure_default" }
+    );
+
+    if (directAzureResult) return directAzureResult;
+  }
+
+  const baseUrls = getOcrServiceUrls();
+
+  if (baseUrls.length === 0) {
+    throw new FinancialAnalysisError(
+      "ocr_extraction_failure",
+      "Azure OCR is not configured",
+      500,
+      {
+        fileName: document.fileName,
+        hasOcrServiceUrl: hasConfiguredOcrServiceUrl(),
+        hasAzureDocumentIntelligenceEndpoint: Boolean(
+          process.env.AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT
+        ),
+        hasAzureDocumentIntelligenceKey: Boolean(
+          process.env.AZURE_DOCUMENT_INTELLIGENCE_KEY
+        ),
+      }
+    );
+  }
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   const headers: Record<string, string> = {};
@@ -1111,7 +1135,11 @@ function runAzureOcrPyCandidate(
             "ocr_extraction_failure",
             "Azure OCR fallback failed",
             502,
-            { code, stdout, stderr }
+            {
+              code,
+              stdoutTail: stdout.trim().split(/\r?\n/).slice(-8).join("\n"),
+              stderrTail: stderr.trim().split(/\r?\n/).slice(-8).join("\n"),
+            }
           )
         );
         return;
@@ -3855,25 +3883,27 @@ function getPositiveNumberEnv(name: string, fallback: number) {
 }
 
 function getOcrServiceUrl() {
-  return getOcrServiceUrls()[0] || DEFAULT_LOCAL_OCR_SERVICE_URL;
+  return getOcrServiceUrls()[0] || "";
 }
 
-function getOcrServiceUrls() {
-  const configuredUrl = (
+function getConfiguredOcrServiceUrl() {
+  return (
     process.env.OCR_SERVICE_URL ||
     process.env.FINANCIAL_OCR_SERVICE_URL ||
     ""
   ).replace(/\/+$/, "");
+}
+
+function hasConfiguredOcrServiceUrl() {
+  return Boolean(getConfiguredOcrServiceUrl());
+}
+
+function getOcrServiceUrls() {
+  const configuredUrl = getConfiguredOcrServiceUrl();
 
   if (configuredUrl) return [configuredUrl];
 
-  return isRailwayRuntime()
-    ? [
-        DEFAULT_RAILWAY_OCR_SERVICE_PORT_URL,
-        DEFAULT_RAILWAY_OCR_SERVICE_URL,
-        DEFAULT_RAILWAY_OCR_SERVICE_PUBLIC_URL,
-      ]
-    : [DEFAULT_LOCAL_OCR_SERVICE_URL];
+  return isRailwayRuntime() ? [] : [DEFAULT_LOCAL_OCR_SERVICE_URL];
 }
 
 function getOcrServiceApiKey() {

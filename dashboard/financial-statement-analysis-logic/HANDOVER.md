@@ -27,20 +27,9 @@ OCR_SERVICE_URL=
 OCR_SERVICE_TIMEOUT_MS=240000
 ```
 
-On Railway, `OCR_SERVICE_URL` defaults to:
-
-```text
-http://kreditlab-tools-platform.railway.internal:8000
-```
-
-During local development it defaults to:
-
-```text
-http://127.0.0.1:8000
-```
-
-Only set `OCR_SERVICE_URL` if the OCR service name is different or if the
-dashboard must call a public URL.
+Leave `OCR_SERVICE_URL` blank in the current single-service Railway deployment
+so the dashboard runs Azure OCR directly. Only set it if the OCR service is
+deployed as a separate Railway service or public URL.
 
 ## OCR Service Variables
 
