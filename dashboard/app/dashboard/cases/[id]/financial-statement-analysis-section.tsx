@@ -195,15 +195,6 @@ const getErrorDetailMessage = (detail: unknown): string => {
     if (triggerMessage) return triggerMessage;
   }
 
-  const attemptedOcrServiceUrls = detail.attemptedOcrServiceUrls;
-  if (Array.isArray(attemptedOcrServiceUrls)) {
-    const urls = attemptedOcrServiceUrls
-      .filter((item): item is string => typeof item === "string")
-      .slice(0, 3);
-
-    if (urls.length > 0) return `Attempted OCR URLs: ${urls.join(", ")}`;
-  }
-
   const stdoutTail = detail.stdoutTail;
   if (typeof stdoutTail === "string" && stdoutTail.trim()) {
     return stdoutTail.trim().split(/\r?\n/).slice(-3).join("; ");

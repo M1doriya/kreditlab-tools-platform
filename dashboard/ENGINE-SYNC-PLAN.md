@@ -5,14 +5,16 @@ The dashboard owns its vendored analysis engine under
 
 ## Current OCR Flow
 
-PDF inputs are converted through the Railway OCR service before Claude analysis:
+PDF inputs are converted with Azure Document Intelligence inside the dashboard
+Railway service before Claude analysis:
 
 ```text
-PDF -> OCR service -> Claude -> render
+PDF -> Azure Document Intelligence -> Claude -> render
 ```
 
-The OCR service uses Azure Document Intelligence first and LLM Whisperer as an
-optional backup.
+LLM Whisperer remains available as a backup credential for OCR work. The
+dashboard PDF-to-TXT path uses the Azure and backup OCR variables on the same
+Railway service.
 
 ## Sync Notes
 
@@ -20,14 +22,19 @@ optional backup.
 - `render_bridge.py` is dashboard-only glue for HTML, PDF, and Excel output.
 - If the standalone analyzer repo changes, sync only the engine files that are
   still owned by the dashboard integration.
-- Keep OCR provider secrets in the OCR service deployment, not in the dashboard.
+- Keep OCR provider secrets in Railway variables, not in the repository.
 
 ## Required Dashboard OCR Config
 
 ```bash
 SERVICE_API_KEY=...
+AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT=...
+AZURE_DOCUMENT_INTELLIGENCE_KEY=...
+LLMWHISPERER_API_KEY=...
+OCR_MODEL=...
+OCR_GPU_MEMORY_IN_GB=...
+OVIS_MEMORY_IN_GB=...
+TENSORLAKE_MIN_CONTAINERS=...
+USE_AZURE_OPENAI=...
+AWS_REGION=...
 ```
-
-`OCR_SERVICE_URL` is optional. Leave it blank in the current single-service
-Railway deployment so the dashboard runs Azure OCR directly from
-`AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT` and `AZURE_DOCUMENT_INTELLIGENCE_KEY`.

@@ -205,8 +205,7 @@ export class FinancialAnalysisError extends Error {
 const ANTHROPIC_MESSAGES_URL = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_VERSION = "2023-06-01";
 const DEFAULT_ANTHROPIC_MAX_TOKENS = 64000;
-const DEFAULT_OCR_SERVICE_TIMEOUT_MS = 240000;
-const DEFAULT_LOCAL_OCR_SERVICE_URL = "http://127.0.0.1:8000";
+const DEFAULT_AZURE_OCR_TIMEOUT_MS = 240000;
 const DEFAULT_RENDERER_TIMEOUT_MS = 60000;
 const DEFAULT_FINANCIAL_RENDERER_API_URL =
   "https://financial-statement-analysis.kreditlab.my";
@@ -263,9 +262,8 @@ export async function convertFinancialPdfsToText(
     stage: "ocr_conversion",
     files: documents.map(getDocumentLogInfo),
     extra: {
-      hasOcrServiceUrl: hasConfiguredOcrServiceUrl(),
       hasAzureDocumentIntelligenceConfig: hasAzureDocumentIntelligenceConfig(),
-      hasOcrServiceApiKey: Boolean(getOcrServiceApiKey()),
+      hasServiceApiKey: Boolean(process.env.SERVICE_API_KEY),
     },
   });
 
@@ -291,13 +289,13 @@ export async function convertFinancialPdfsToText(
       );
     }
 
-    const ocrResult = await extractPdfWithOcrService(document);
+    const ocrResult = await extractPdfWithAzureOcr(document);
     const text = ocrResult.markdown.trim();
 
     if (!text) {
       throw new FinancialAnalysisError(
         "ocr_empty_output",
-        "OCR service returned empty text",
+        "Azure OCR returned empty text",
         502,
         { fileName: document.fileName, provider: ocrResult.provider }
       );
@@ -681,7 +679,7 @@ async function extractFinancialStatements(
     }
 
     if (extension === ".pdf" || isPdfMimeType(document.fileType)) {
-      const ocrResult = await extractPdfWithOcrService(document);
+      const ocrResult = await extractPdfWithAzureOcr(document);
 
       extracted.push({
         fileName: document.fileName,
@@ -790,34 +788,18 @@ function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
   return copy.buffer;
 }
 
-async function extractPdfWithOcrService(
+async function extractPdfWithAzureOcr(
   document: FinancialStatementDocumentInput
 ) {
-  const timeoutMs = getPositiveNumberEnv(
-    "OCR_SERVICE_TIMEOUT_MS",
-    DEFAULT_OCR_SERVICE_TIMEOUT_MS
-  );
+  const timeoutMs = DEFAULT_AZURE_OCR_TIMEOUT_MS;
 
-  if (!hasConfiguredOcrServiceUrl() && hasAzureDocumentIntelligenceConfig()) {
-    const directAzureResult = await tryExtractPdfWithAzureFallback(
-      document,
-      timeoutMs,
-      { reason: "direct_azure_default" }
-    );
-
-    if (directAzureResult) return directAzureResult;
-  }
-
-  const baseUrls = getOcrServiceUrls();
-
-  if (baseUrls.length === 0) {
+  if (!hasAzureDocumentIntelligenceConfig()) {
     throw new FinancialAnalysisError(
       "ocr_extraction_failure",
-      "Azure OCR is not configured",
+      "Azure Document Intelligence is not configured",
       500,
       {
         fileName: document.fileName,
-        hasOcrServiceUrl: hasConfiguredOcrServiceUrl(),
         hasAzureDocumentIntelligenceEndpoint: Boolean(
           process.env.AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT
         ),
@@ -828,150 +810,21 @@ async function extractPdfWithOcrService(
     );
   }
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-  const headers: Record<string, string> = {};
-  const apiKey = getOcrServiceApiKey();
-
-  if (apiKey) {
-    headers.Authorization = `Bearer ${apiKey}`;
-  }
-
-  let response: Response | null = null;
-  let responseBaseUrl = baseUrls[0] || getOcrServiceUrl();
-  let lastFetchError: unknown = null;
-
-  for (const baseUrl of baseUrls) {
-    const formData = new FormData();
-    formData.append("file", document.file, document.fileName);
-
-    try {
-      response = await fetch(`${baseUrl}/parse`, {
-        method: "POST",
-        headers,
-        body: formData,
-        signal: controller.signal,
-      });
-      responseBaseUrl = baseUrl;
-      lastFetchError = null;
-      break;
-    } catch (error) {
-      responseBaseUrl = baseUrl;
-      lastFetchError = error;
-
-      const isAbort = error instanceof Error && error.name === "AbortError";
-      if (isAbort) break;
-    }
-  }
-
-  clearTimeout(timeout);
-
-  if (lastFetchError) {
-    const fallbackResult = await tryExtractPdfWithAzureFallback(
-      document,
-      timeoutMs,
-      {
-        reason: "ocr_service_unreachable",
-        detail: getErrorDetail(lastFetchError),
-        attemptedOcrServiceUrls: baseUrls.map(describeOcrServiceUrl),
-      }
-    );
-
-    if (fallbackResult) return fallbackResult;
-
-    const isAbort =
-      lastFetchError instanceof Error && lastFetchError.name === "AbortError";
-
-    throw new FinancialAnalysisError(
-      "ocr_extraction_failure",
-      isAbort ? "OCR service request timed out" : "OCR service request failed",
-      isAbort ? 504 : 502,
-      {
-        fileName: document.fileName,
-        detail: getErrorDetail(lastFetchError),
-        ocrServiceUrl: describeOcrServiceUrl(responseBaseUrl),
-        attemptedOcrServiceUrls: baseUrls.map(describeOcrServiceUrl),
-        railwayRuntime: isRailwayRuntime(),
-      }
-    );
-  }
-
-  if (!response) {
-    throw new FinancialAnalysisError(
-      "ocr_extraction_failure",
-      "OCR service request failed",
-      502,
-      {
-        fileName: document.fileName,
-        ocrServiceUrl: describeOcrServiceUrl(responseBaseUrl),
-        attemptedOcrServiceUrls: baseUrls.map(describeOcrServiceUrl),
-        railwayRuntime: isRailwayRuntime(),
-      }
-    );
-  }
-
-  const responseBody = await readResponseBody(response);
-
-  if (!response.ok) {
-    const fallbackResult = await tryExtractPdfWithAzureFallback(
-      document,
-      timeoutMs,
-      {
-        reason: "ocr_service_http_failure",
-        status: response.status,
-        ocrServiceUrl: describeOcrServiceUrl(responseBaseUrl),
-      }
-    );
-
-    if (fallbackResult) return fallbackResult;
-
-    throw new FinancialAnalysisError(
-      "ocr_extraction_failure",
-      "OCR service extraction failed",
-      502,
-      {
-        status: response.status,
-        body: responseBody,
-        ocrServiceUrl: describeOcrServiceUrl(responseBaseUrl),
-      }
-    );
-  }
-
-  const markdown = extractMarkdownFromOcrResult(responseBody);
-  const pagesParsed =
-    getNumberFromPath(responseBody, ["parsed_pages_count"]) ??
-    getNumberFromPath(responseBody, ["usage", "pages_parsed"]) ??
-    undefined;
-  const fileId = getStringFromRecord(responseBody, "file_id");
-  const parseId = getStringFromRecord(responseBody, "parse_id");
-  const servedBy = getStringFromRecord(responseBody, "served_by");
-  const provider =
-    servedBy ||
-    getStringFromRecord(responseBody, "provider") ||
-    getStringFromRecord(responseBody, "ocr_model") ||
-    "azure";
-
-  if (!markdown.trim()) {
-    throw new FinancialAnalysisError(
-      "ocr_empty_output",
-      "OCR service did not return markdown content",
-      502,
-      { fileName: document.fileName, provider, responseBody }
-    );
-  }
-
-  return { fileId, parseId, markdown, pagesParsed, provider, servedBy };
+  return extractPdfWithAzureDocumentIntelligence(document, timeoutMs, {
+    reason: "direct_azure_document_intelligence",
+  });
 }
 
-async function tryExtractPdfWithAzureFallback(
+async function extractPdfWithAzureDocumentIntelligence(
   document: FinancialStatementDocumentInput,
   timeoutMs: number,
   trigger: JsonRecord
 ) {
-  if (!hasAzureDocumentIntelligenceConfig()) return null;
-
   const tmpDir = mkdtempSync(path.join(os.tmpdir(), "kl-azure-ocr-"));
-  const inputPath = path.join(tmpDir, sanitizeTempFileName(document.fileName || "input.pdf"));
+  const inputPath = path.join(
+    tmpDir,
+    sanitizeTempFileName(document.fileName || "input.pdf")
+  );
   const outPath = path.join(tmpDir, "ocr-result.json");
   const failures: JsonRecord[] = [];
 
@@ -999,7 +852,7 @@ async function tryExtractPdfWithAzureFallback(
         if (!markdown.trim()) {
           throw new FinancialAnalysisError(
             "ocr_empty_output",
-            "Azure OCR fallback did not return markdown content",
+            "Azure OCR did not return markdown content",
             502,
             { fileName: document.fileName, trigger }
           );
@@ -1029,7 +882,7 @@ async function tryExtractPdfWithAzureFallback(
 
     throw new FinancialAnalysisError(
       "ocr_extraction_failure",
-      "Azure OCR fallback could not be started",
+      "Azure OCR could not be started",
       502,
       { fileName: document.fileName, trigger, failures }
     );
@@ -1088,7 +941,7 @@ function runAzureOcrPyCandidate(
       reject(
         new FinancialAnalysisError(
           "ocr_extraction_failure",
-          "Azure OCR fallback timed out",
+          "Azure OCR timed out",
           504,
           { timeoutMs }
         )
@@ -1111,7 +964,7 @@ function runAzureOcrPyCandidate(
       reject(
         new FinancialAnalysisError(
           "ocr_extraction_failure",
-          "Azure OCR fallback could not be started",
+          "Azure OCR could not be started",
           502,
           {
             startFailure: true,
@@ -1133,7 +986,7 @@ function runAzureOcrPyCandidate(
         reject(
           new FinancialAnalysisError(
             "ocr_extraction_failure",
-            "Azure OCR fallback failed",
+            "Azure OCR failed",
             502,
             {
               code,
@@ -1152,7 +1005,7 @@ function runAzureOcrPyCandidate(
         reject(
           new FinancialAnalysisError(
             "ocr_extraction_failure",
-            "Azure OCR fallback returned invalid JSON",
+            "Azure OCR returned invalid JSON",
             502,
             {
               parseError: error instanceof Error ? error.message : String(error),
@@ -1168,7 +1021,7 @@ function runAzureOcrPyCandidate(
         reject(
           new FinancialAnalysisError(
             "ocr_extraction_failure",
-            "Azure OCR fallback returned a non-object result",
+            "Azure OCR returned a non-object result",
             502,
             { code }
           )
@@ -3882,56 +3735,11 @@ function getPositiveNumberEnv(name: string, fallback: number) {
   return Number.isFinite(value) && value > 0 ? value : fallback;
 }
 
-function getOcrServiceUrl() {
-  return getOcrServiceUrls()[0] || "";
-}
-
-function getConfiguredOcrServiceUrl() {
-  return (
-    process.env.OCR_SERVICE_URL ||
-    process.env.FINANCIAL_OCR_SERVICE_URL ||
-    ""
-  ).replace(/\/+$/, "");
-}
-
-function hasConfiguredOcrServiceUrl() {
-  return Boolean(getConfiguredOcrServiceUrl());
-}
-
-function getOcrServiceUrls() {
-  const configuredUrl = getConfiguredOcrServiceUrl();
-
-  if (configuredUrl) return [configuredUrl];
-
-  return isRailwayRuntime() ? [] : [DEFAULT_LOCAL_OCR_SERVICE_URL];
-}
-
-function getOcrServiceApiKey() {
-  return process.env.SERVICE_API_KEY || "";
-}
-
 function hasAzureDocumentIntelligenceConfig() {
   return Boolean(
     process.env.AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT &&
       process.env.AZURE_DOCUMENT_INTELLIGENCE_KEY
   );
-}
-
-function isRailwayRuntime() {
-  return Boolean(
-    process.env.RAILWAY_ENVIRONMENT_ID ||
-      process.env.RAILWAY_PROJECT_ID ||
-      process.env.RAILWAY_SERVICE_ID
-  );
-}
-
-function describeOcrServiceUrl(url: string) {
-  try {
-    const parsed = new URL(url);
-    return `${parsed.protocol}//${parsed.host}`;
-  } catch {
-    return url;
-  }
 }
 
 function getErrorDetail(error: unknown): string {

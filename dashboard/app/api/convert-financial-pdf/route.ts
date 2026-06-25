@@ -173,9 +173,6 @@ export async function POST(req: Request) {
           fileSize:
             typeof document.file.size === "number" ? document.file.size : undefined,
         })),
-        hasOcrServiceUrl: Boolean(
-          process.env.OCR_SERVICE_URL || process.env.FINANCIAL_OCR_SERVICE_URL
-        ),
         hasServiceApiKey: Boolean(process.env.SERVICE_API_KEY),
         hasAzureDocumentIntelligenceEndpoint: Boolean(
           process.env.AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT
@@ -221,7 +218,7 @@ export async function POST(req: Request) {
 
     return Response.json(
       {
-        error: "Failed to convert PDF with OCR service",
+        error: "Failed to convert PDF with Azure OCR",
         code: "ocr_extraction_failure",
         detail: error instanceof Error ? error.message : String(error),
       },

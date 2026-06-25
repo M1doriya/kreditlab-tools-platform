@@ -5,7 +5,7 @@ but this standalone service still needs to work when the financial tool is used
 directly. Keep the checked-in renderer as the source of truth while exposing the
 same practical flow:
 
-PDF -> OCR service markdown -> Claude JSON -> renderer HTML
+PDF -> Azure OCR markdown -> Claude JSON -> renderer HTML
 TXT/MD -> Claude JSON -> renderer HTML
 JSON -> renderer HTML
 """
@@ -50,6 +50,7 @@ from streamlit_financial_report_v7_7 import (  # noqa: E402
     validate_json_structure,
 )
 from excel_export import convert_json_to_excel  # noqa: E402
+from azure_ocr import extract_pdf_bytes as extract_pdf_bytes_with_ocr  # noqa: E402
 
 app = FastAPI(title="Kredit Lab Financial Statement Analyzer API")
 
@@ -60,10 +61,6 @@ PDF_UPLOAD_EXTENSIONS = [".pdf"]
 
 ANTHROPIC_MESSAGES_URL = "https://api.anthropic.com/v1/messages"
 ANTHROPIC_VERSION = "2023-06-01"
-DEFAULT_OCR_SERVICE_TIMEOUT_SECONDS = 240
-DEFAULT_RAILWAY_OCR_SERVICE_URL = "http://kreditlab-tools-platform.railway.internal"
-DEFAULT_RAILWAY_OCR_SERVICE_PORT_URL = "http://kreditlab-tools-platform.railway.internal:8000"
-DEFAULT_LOCAL_OCR_SERVICE_URL = "http://127.0.0.1:8000"
 DEFAULT_ANTHROPIC_MAX_TOKENS = 64000
 
 CLAUDE_SCHEMA_INSTRUCTIONS_FILE = Path(__file__).with_name(
@@ -115,8 +112,13 @@ def health() -> dict[str, Any]:
         "active_flow": "pdf_txt_md_json_pipeline",
         "supported_upload_extensions": SUPPORTED_UPLOAD_EXTENSIONS,
         "has_anthropic_api_key": bool(get_anthropic_api_key()),
-        "has_ocr_service_url": bool(ocr_service_url()),
-        "has_ocr_service_api_key": bool(ocr_service_api_key()),
+        "has_azure_document_intelligence_endpoint": bool(
+            os.getenv("AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT")
+        ),
+        "has_azure_document_intelligence_key": bool(
+            os.getenv("AZURE_DOCUMENT_INTELLIGENCE_KEY")
+        ),
+        "has_llmwhisperer_api_key": bool(os.getenv("LLMWHISPERER_API_KEY")),
         "default_claude_model": default_model,
         "convert_endpoint": "/convert",
         "analyze_endpoint": "/analyze",
@@ -143,7 +145,7 @@ async def convert(files: list[UploadFile] = File(..., alias="file")) -> dict[str
                 {"file_name": file_name, "content_type": upload.content_type},
             )
 
-        markdown, metadata = extract_pdf_markdown_with_ocr_service(
+        markdown, metadata = extract_pdf_markdown_with_azure_ocr(
             file_name=file_name,
             content_type=upload.content_type,
             raw_bytes=raw_bytes,
@@ -224,7 +226,7 @@ async def analyze(
             continue
 
         if is_pdf_upload(file_name, content_type):
-            markdown, metadata = extract_pdf_markdown_with_ocr_service(
+            markdown, metadata = extract_pdf_markdown_with_azure_ocr(
                 file_name=file_name,
                 content_type=content_type,
                 raw_bytes=raw_bytes,
@@ -619,49 +621,22 @@ def parse_claude_json(text: str) -> dict[str, Any]:
     return parsed
 
 
-def extract_pdf_markdown_with_ocr_service(
+def extract_pdf_markdown_with_azure_ocr(
     file_name: str,
     content_type: str | None,
     raw_bytes: bytes,
 ) -> tuple[str, dict[str, Any]]:
-    base_url = ocr_service_url()
-
-    headers: dict[str, str] = {}
-    api_key = ocr_service_api_key()
-
-    if api_key:
-        headers["Authorization"] = f"Bearer {api_key}"
+    _ = content_type
 
     try:
-        response = requests.post(
-            f"{base_url}/parse",
-            headers=headers,
-            files={
-                "file": (
-                    file_name,
-                    raw_bytes,
-                    get_upload_mime_type(file_name, content_type),
-                )
-            },
-            timeout=ocr_service_timeout_seconds(),
-        )
-    except requests.RequestException as exc:
+        response_body = extract_pdf_bytes_with_ocr(raw_bytes, file_name)
+    except Exception as exc:
         raise api_error(
             502,
             "ocr_extraction_failure",
-            "OCR service request failed.",
+            "Azure OCR extraction failed.",
             {"detail": str(exc)},
         ) from exc
-
-    response_body = read_response_body(response)
-
-    if not response.ok:
-        raise api_error(
-            502,
-            "ocr_extraction_failure",
-            "OCR service extraction failed.",
-            {"status": response.status_code, "body": response_body},
-        )
 
     markdown = extract_markdown_from_ocr_result(response_body).strip()
     pages_parsed = get_number_from_path(response_body, ["usage", "pages_parsed"])
@@ -679,7 +654,7 @@ def extract_pdf_markdown_with_ocr_service(
         raise api_error(
             502,
             "ocr_empty_output",
-            "OCR service did not return markdown content.",
+            "Azure OCR did not return markdown content.",
             {"file_name": file_name, "provider": provider},
         )
 
@@ -791,24 +766,6 @@ def is_pdf_upload(file_name: str, content_type: str | None) -> bool:
     return file_name.lower().endswith(".pdf") or content_type == "application/pdf"
 
 
-def get_upload_mime_type(file_name: str, content_type: str | None) -> str:
-    if content_type:
-        return content_type
-
-    normalized = file_name.lower()
-
-    if normalized.endswith(".pdf"):
-        return "application/pdf"
-    if normalized.endswith(".md"):
-        return "text/markdown"
-    if normalized.endswith(".txt"):
-        return "text/plain"
-    if normalized.endswith(".json"):
-        return "application/json"
-
-    return "application/octet-stream"
-
-
 def resolve_claude_model(requested_model: str | None) -> str:
     requested = (requested_model or "").strip()
     env_default = os.getenv("ANTHROPIC_MODEL", "").strip()
@@ -849,46 +806,6 @@ def resolve_claude_effort(model: str) -> str | None:
 
 def get_anthropic_api_key() -> str:
     return os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API_KEY") or ""
-
-
-def ocr_service_url() -> str:
-    configured = (
-        os.getenv("OCR_SERVICE_URL")
-        or os.getenv("FINANCIAL_OCR_SERVICE_URL")
-        or ""
-    ).rstrip("/")
-
-    if configured:
-        return configured
-
-    if is_railway_runtime():
-        return DEFAULT_RAILWAY_OCR_SERVICE_PORT_URL
-
-    return DEFAULT_LOCAL_OCR_SERVICE_URL
-
-
-def ocr_service_api_key() -> str:
-    return os.getenv("SERVICE_API_KEY") or ""
-
-
-def is_railway_runtime() -> bool:
-    return bool(
-        os.getenv("RAILWAY_ENVIRONMENT_ID")
-        or os.getenv("RAILWAY_PROJECT_ID")
-        or os.getenv("RAILWAY_SERVICE_ID")
-    )
-
-
-def ocr_service_timeout_seconds() -> int | float:
-    timeout_ms = positive_number_env("OCR_SERVICE_TIMEOUT_MS", 0)
-
-    if timeout_ms > 0:
-        return timeout_ms / 1000
-
-    return positive_number_env(
-        "OCR_SERVICE_TIMEOUT_SECONDS",
-        DEFAULT_OCR_SERVICE_TIMEOUT_SECONDS,
-    )
 
 
 def get_string_from_mapping(value: Any, key: str) -> str | None:
